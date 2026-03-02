@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>翻倉交易紀錄</title>
+<title>翻倉交易紀錄 v2</title>
 <style>
-    /* 主題色 黑底 + 橘色 */
     body { font-family: Arial, sans-serif; margin: 0; background-color: #000; color: #FFA500; padding: 10px; }
     h2 { text-align: center; color: #FFA500; }
     input, select, button { padding: 10px; margin: 5px 0; border-radius: 6px; border: none; font-size: 16px; }
@@ -27,7 +26,7 @@
 </head>
 <body>
 
-<h2>翻倉交易紀錄</h2>
+<h2>翻倉交易紀錄 v2</h2>
 
 <div id="form">
     <div class="form-row">
@@ -61,7 +60,8 @@
             <th>止損價</th>
             <th>止盈價</th>
             <th>投入資金(USDT)</th>
-            <th>結果</th>
+            <th>狀態</th>
+            <th>實際盈虧</th>
             <th>帳戶資金(USDT)</th>
         </tr>
     </thead>
@@ -88,7 +88,6 @@ function addTrade() {
         return;
     }
 
-    // 計算投入資金
     let investedCapital = accountBalance * (capitalRatio / 100);
 
     tradeCount += 1;
@@ -104,11 +103,16 @@ function addTrade() {
         <td>${stoploss}</td>
         <td>${takeprofit}</td>
         <td>${investedCapital.toFixed(4)}</td>
-        <td>進行中</td>
+        <td>
+            <select onchange="updateStatus(this)">
+                <option value="進行中">進行中</option>
+                <option value="已結束">已結束</option>
+            </select>
+        </td>
+        <td><input type="number" step="any" placeholder="盈虧" onchange="updateProfit(this)"></td>
         <td>${accountBalance.toFixed(4)}</td>
     `;
 
-    // 扣除已投入資金
     accountBalance -= investedCapital;
 
     // 清空表單
@@ -118,6 +122,30 @@ function addTrade() {
     document.getElementById("stoploss").value = "";
     document.getElementById("takeprofit").value = "";
     document.getElementById("capitalRatio").value = "";
+}
+
+// 更新狀態選擇
+function updateStatus(select) {
+    const row = select.closest("tr");
+    const status = select.value;
+    if (status === "已結束") {
+        const profitInput = row.querySelector("input[type='number']");
+        if (profitInput.value) {
+            updateProfit(profitInput);
+        }
+    }
+}
+
+// 更新盈虧及帳戶資金
+function updateProfit(input) {
+    const row = input.closest("tr");
+    const profit = parseFloat(input.value);
+    if (isNaN(profit)) return;
+    const investedCapital = parseFloat(row.cells[7].textContent);
+    // 將投入資金返還 + 盈虧
+    accountBalance += investedCapital + profit;
+    row.cells[10].textContent = accountBalance.toFixed(4);
+    input.disabled = true; // 防止重複修改
 }
 </script>
 
