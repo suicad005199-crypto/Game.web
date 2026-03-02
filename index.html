@@ -2,44 +2,54 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>翻倉交易紀錄</title>
 <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #333; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
-    input, select { padding: 5px; margin: 3px; }
-    .form-row { margin-bottom: 10px; }
+    /* 主題色 黑底 + 橘色 */
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #000; color: #FFA500; padding: 10px; }
+    h2 { text-align: center; color: #FFA500; }
+    input, select, button { padding: 10px; margin: 5px 0; border-radius: 6px; border: none; font-size: 16px; }
+    input, select { width: 100%; box-sizing: border-box; }
+    button { background-color: #FFA500; color: #000; font-weight: bold; cursor: pointer; width: 100%; }
+    button:hover { opacity: 0.9; }
+    
+    .form-row { display: flex; flex-direction: column; margin-bottom: 10px; }
+    @media(min-width: 600px){ .form-row { flex-direction: row; gap: 10px; } }
+
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 14px; }
+    thead { background-color: #222; }
+    th, td { border: 1px solid #FFA500; padding: 6px; text-align: center; color: #FFA500; }
+    tbody tr:nth-child(even) { background-color: #111; }
+    tbody tr:nth-child(odd) { background-color: #000; }
+    
+    .table-wrapper { overflow-x: auto; }
 </style>
 </head>
 <body>
 
-<h2>翻倉交易紀錄填寫</h2>
+<h2>翻倉交易紀錄</h2>
 
 <div id="form">
     <div class="form-row">
-        幣種/合約: <input type="text" id="symbol" placeholder="例如 AAVEUSDT.P">
-        方向: 
+        <input type="text" id="symbol" placeholder="幣種/合約 (例如 AAVEUSDT.P)">
         <select id="side">
             <option value="多">多</option>
             <option value="空">空</option>
         </select>
-        槓桿: <input type="number" id="leverage" placeholder="例如 75">
+        <input type="number" id="leverage" placeholder="槓桿 (例如 75)">
     </div>
     <div class="form-row">
-        進場價: <input type="number" step="any" id="entry" placeholder="進場價">
-        止損價: <input type="number" step="any" id="stoploss" placeholder="止損價">
-        止損理由: <input type="text" id="stoplossReason" placeholder="止損理由">
+        <input type="number" step="any" id="entry" placeholder="進場價">
+        <input type="number" step="any" id="stoploss" placeholder="止損價">
+        <input type="text" id="takeprofit" placeholder="止盈價 (可多個 TP1/TP2)">
     </div>
     <div class="form-row">
-        止盈價: <input type="text" id="takeprofit" placeholder="止盈（可多個 TP1/TP2）">
-        止盈理由: <input type="text" id="takeprofitReason" placeholder="止盈理由">
-        投入資金比例: <input type="number" id="capitalRatio" placeholder="0-100%" step="any">
+        <input type="number" id="capitalRatio" placeholder="投入資金比例 0-100%" step="any">
     </div>
     <button onclick="addTrade()">新增交易</button>
 </div>
 
-<h2>交易紀錄</h2>
+<div class="table-wrapper">
 <table id="tradeTable">
     <thead>
         <tr>
@@ -49,9 +59,7 @@
             <th>槓桿</th>
             <th>進場價</th>
             <th>止損價</th>
-            <th>止損理由</th>
             <th>止盈價</th>
-            <th>止盈理由</th>
             <th>投入資金(USDT)</th>
             <th>結果</th>
             <th>帳戶資金(USDT)</th>
@@ -60,20 +68,19 @@
     <tbody>
     </tbody>
 </table>
+</div>
 
 <script>
 let accountBalance = 61.59; // 初始帳戶資金
 let tradeCount = 0;
 
 function addTrade() {
-    const symbol = document.getElementById("symbol").value;
+    const symbol = document.getElementById("symbol").value.trim();
     const side = document.getElementById("side").value;
     const leverage = parseFloat(document.getElementById("leverage").value);
     const entry = parseFloat(document.getElementById("entry").value);
     const stoploss = parseFloat(document.getElementById("stoploss").value);
-    const stoplossReason = document.getElementById("stoplossReason").value;
-    const takeprofit = document.getElementById("takeprofit").value;
-    const takeprofitReason = document.getElementById("takeprofitReason").value;
+    const takeprofit = document.getElementById("takeprofit").value.trim();
     const capitalRatio = parseFloat(document.getElementById("capitalRatio").value);
 
     if (!symbol || isNaN(leverage) || isNaN(entry) || isNaN(stoploss) || isNaN(capitalRatio)) {
@@ -95,23 +102,21 @@ function addTrade() {
         <td>${leverage}</td>
         <td>${entry}</td>
         <td>${stoploss}</td>
-        <td>${stoplossReason}</td>
         <td>${takeprofit}</td>
-        <td>${takeprofitReason}</td>
         <td>${investedCapital.toFixed(4)}</td>
         <td>進行中</td>
         <td>${accountBalance.toFixed(4)}</td>
     `;
 
-    // 自動更新帳戶資金：扣除已投入資金
+    // 扣除已投入資金
     accountBalance -= investedCapital;
+
+    // 清空表單
     document.getElementById("symbol").value = "";
     document.getElementById("leverage").value = "";
     document.getElementById("entry").value = "";
     document.getElementById("stoploss").value = "";
-    document.getElementById("stoplossReason").value = "";
     document.getElementById("takeprofit").value = "";
-    document.getElementById("takeprofitReason").value = "";
     document.getElementById("capitalRatio").value = "";
 }
 </script>
