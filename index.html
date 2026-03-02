@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crypto Tracker Pro</title>
+    <title>Crypto Pro Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --slate-blue: #708090; }
@@ -12,26 +12,46 @@
         .slate-text { color: var(--slate-blue); }
         .modal { display: none; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
         .modal.active { display: flex; }
-        input, select { -webkit-appearance: none; border: 1px solid #e2e8f0; }
+        .tab-active { border-bottom: 3px solid var(--slate-blue); color: var(--slate-blue); font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <header class="slate-bg text-white p-6 rounded-b-[35px] shadow-lg sticky top-0 z-10">
-        <p class="text-xs opacity-80">總權益 (USDT)</p>
-        <h1 id="totalDisplay" class="text-3xl font-bold mt-1">0.00</h1>
-        <div class="mt-2 text-xs opacity-70">初始資金: <span id="initFundDisplay">0.00</span></div>
+    <header class="slate-bg text-white p-6 rounded-b-[35px] shadow-lg sticky top-0 z-50">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-[10px] opacity-80">總實現盈虧 (USDT)</p>
+                <h1 id="totalPnl" class="text-3xl font-bold">0.00</h1>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] opacity-80">初始資金</p>
+                <p id="initDisplay" class="font-mono">0.00</p>
+            </div>
+        </div>
+        <div class="flex mt-4 gap-4 text-xs opacity-90">
+            <div>勝率: <span id="winRate">0%</span></div>
+            <div>交易次數: <span id="tradeCount">0</span></div>
+        </div>
     </header>
+
+    <nav class="flex bg-white shadow-sm mb-2 sticky top-[140px] z-40">
+        <button onclick="switchTab('active')" id="tabActive" class="flex-1 py-3 tab-active">當前持倉</button>
+        <button onclick="switchTab('history')" id="tabHistory" class="flex-1 py-3 text-gray-400">歷史紀錄</button>
+    </nav>
 
     <main id="tradeList" class="p-4 space-y-3"></main>
 
-    <div id="tradeModal" class="modal fixed inset-0 z-50 items-end">
+    <div id="tradeModal" class="modal fixed inset-0 z-[60] items-end">
         <div class="bg-white w-full rounded-t-[30px] p-6 shadow-2xl">
-            <h2 id="modalTitle" class="text-lg font-bold slate-text mb-4">新增交易</h2>
+            <div class="flex justify-between mb-4">
+                <h2 id="modalTitle" class="text-lg font-bold slate-text">新增交易</h2>
+                <button onclick="closeModal()" class="text-gray-300 text-xl">&times;</button>
+            </div>
             <input type="hidden" id="editIndex">
+            
             <div class="space-y-3">
                 <div class="flex gap-2">
-                    <input id="symbol" type="text" placeholder="幣種" class="w-full p-4 rounded-xl bg-gray-50">
+                    <input id="symbol" type="text" placeholder="幣種" class="w-full p-4 rounded-xl bg-gray-50 uppercase">
                     <select id="side" class="p-4 rounded-xl bg-gray-50">
                         <option value="Long">做多</option>
                         <option value="Short">做空</option>
@@ -42,78 +62,113 @@
                     <input id="margin" type="number" placeholder="保證金" class="w-2/3 p-4 rounded-xl bg-gray-50">
                 </div>
                 <input id="entry" type="number" placeholder="開倉價格" class="w-full p-4 rounded-xl bg-gray-50">
+                
+                <div id="closeSection" class="hidden border-t pt-3 mt-3">
+                    <p class="text-xs text-gray-400 mb-1">平倉設定</p>
+                    <input id="exit" type="number" placeholder="平倉價格" class="w-full p-4 rounded-xl bg-blue-50 border border-blue-100">
+                </div>
             </div>
+
             <div class="flex gap-3 mt-6">
-                <button onclick="closeModal('tradeModal')" class="flex-1 py-4 text-gray-400 font-medium">取消</button>
-                <button onclick="saveTrade()" class="flex-[2] slate-bg text-white py-4 rounded-2xl font-bold shadow-lg">儲存紀錄</button>
+                <button id="btnDelete" onclick="deleteTrade()" class="hidden px-4 py-4 text-red-400 text-sm">刪除</button>
+                <button onclick="saveTrade()" class="flex-1 slate-bg text-white py-4 rounded-2xl font-bold shadow-lg">確認儲存</button>
             </div>
         </div>
     </div>
 
-    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-3 pb-8 px-6 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+    <footer class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t flex justify-around items-center py-3 pb-8 px-6 shadow-lg z-50">
         <button onclick="setInitialFund()" class="flex flex-col items-center slate-text">
-            <div class="p-1">📁</div>
-            <span class="text-[10px] font-bold">資產清單</span>
+            <span class="text-xl">💰</span>
+            <span class="text-[10px] font-bold">本金設定</span>
         </button>
-        
-        <button onclick="openTradeModal()" class="slate-bg text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl -mt-12 border-[6px] border-[#f1f5f9]">
+        <button onclick="openModal()" class="slate-bg text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl -mt-12 border-[6px] border-[#f1f5f9]">
             <span class="text-2xl">+</span>
         </button>
-
-        <button onclick="location.reload()" class="flex flex-col items-center text-gray-400">
-            <div class="p-1">🔄</div>
-            <span class="text-[10px] font-bold">同步</span>
+        <button onclick="exportData()" class="flex flex-col items-center text-gray-400">
+            <span class="text-xl">📊</span>
+            <span class="text-[10px] font-bold">導出資料</span>
         </button>
     </footer>
 
     <script>
-        let state = JSON.parse(localStorage.getItem('crypto_data')) || { initial: 0, trades: [] };
+        let state = JSON.parse(localStorage.getItem('crypto_v2')) || { initial: 0, trades: [], currentTab: 'active' };
 
         function render() {
             const list = document.getElementById('tradeList');
-            list.innerHTML = state.trades.length ? '' : '<p class="text-center text-gray-400 mt-10">尚無紀錄</p>';
+            const filtered = state.trades.filter(t => state.currentTab === 'active' ? !t.exit : t.exit);
+            list.innerHTML = filtered.length ? '' : `<p class="text-center text-gray-400 pt-10">尚無${state.currentTab === 'active' ? '持倉' : '紀錄'}</p>`;
             
+            let historyPnl = 0;
+            let wins = 0;
+
             state.trades.forEach((t, i) => {
-                const color = t.side === 'Long' ? 'green' : 'red';
-                list.innerHTML += `
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-${color}-500 flex justify-between items-center">
-                        <div onclick="editTrade(${i})" class="flex-1">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-gray-800">${t.symbol}</span>
-                                <span class="text-[10px] bg-${color}-100 text-${color}-600 px-2 py-0.5 rounded-full font-bold">${t.side} ${t.lev}x</span>
+                const pnl = calculatePnl(t);
+                if (t.exit) {
+                    historyPnl += pnl;
+                    if (pnl > 0) wins++;
+                }
+
+                if ((state.currentTab === 'active' && !t.exit) || (state.currentTab === 'history' && t.exit)) {
+                    const color = t.side === 'Long' ? 'green' : 'red';
+                    const pnlClass = pnl >= 0 ? 'text-green-500' : 'text-red-500';
+                    
+                    list.innerHTML += `
+                        <div onclick="openModal(${state.trades.indexOf(t)})" class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-${color}-500 flex justify-between items-center animate-fade-in">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-gray-800">${t.symbol}</span>
+                                    <span class="text-[10px] bg-${color}-100 text-${color}-600 px-2 py-0.5 rounded-full font-bold">${t.side} ${t.lev}x</span>
+                                </div>
+                                <div class="text-[11px] text-gray-400 mt-1">開倉: ${t.entry} ${t.exit ? ' | 平倉: '+t.exit : ''}</div>
                             </div>
-                            <div class="text-xs text-gray-400 mt-1">開倉: ${t.entry} | 保證金: ${t.margin}</div>
-                        </div>
-                        <button onclick="deleteTrade(${i})" class="text-gray-300 ml-4 text-sm">刪除</button>
-                    </div>`;
+                            <div class="text-right">
+                                <div class="${pnlClass} font-bold">${t.exit ? (pnl >= 0 ? '+' : '') + pnl.toFixed(2) : '--'}</div>
+                                <div class="text-[10px] text-gray-400">保證金: ${t.margin}</div>
+                            </div>
+                        </div>`;
+                }
             });
 
-            document.getElementById('initFundDisplay').innerText = state.initial.toFixed(2);
-            document.getElementById('totalDisplay').innerText = (state.initial + state.trades.reduce((a, b) => a + Number(b.margin), 0)).toFixed(2);
-            localStorage.setItem('crypto_data', JSON.stringify(state));
+            document.getElementById('totalPnl').innerText = historyPnl.toFixed(2);
+            document.getElementById('totalPnl').className = `text-3xl font-bold ${historyPnl >= 0 ? 'text-white' : 'text-red-200'}`;
+            document.getElementById('initDisplay').innerText = state.initial.toFixed(2);
+            const historyCount = state.trades.filter(t => t.exit).length;
+            document.getElementById('tradeCount').innerText = historyCount;
+            document.getElementById('winRate').innerText = historyCount ? ((wins/historyCount)*100).toFixed(0)+'%' : '0%';
+            localStorage.setItem('crypto_v2', JSON.stringify(state));
         }
 
-        function setInitialFund() {
-            const val = prompt("輸入初始資金 (USDT):", state.initial);
-            if (val !== null) { state.initial = Number(val); render(); }
+        function calculatePnl(t) {
+            if (!t.exit) return 0;
+            const diff = t.side === 'Long' ? (t.exit - t.entry) : (t.entry - t.exit);
+            return (diff / t.entry) * t.margin * t.lev;
         }
 
-        function openTradeModal() {
-            document.getElementById('editIndex').value = "";
-            document.getElementById('modalTitle').innerText = "新增交易";
-            ['symbol', 'entry', 'lev', 'margin'].forEach(id => document.getElementById(id).value = "");
-            document.getElementById('tradeModal').classList.add('active');
+        function switchTab(tab) {
+            state.currentTab = tab;
+            document.getElementById('tabActive').className = `flex-1 py-3 ${tab === 'active' ? 'tab-active' : 'text-gray-400'}`;
+            document.getElementById('tabHistory').className = `flex-1 py-3 ${tab === 'history' ? 'tab-active' : 'text-gray-400'}`;
+            render();
         }
 
-        function editTrade(i) {
-            const t = state.trades[i];
-            document.getElementById('editIndex').value = i;
-            document.getElementById('modalTitle').innerText = "編輯紀錄";
-            document.getElementById('symbol').value = t.symbol;
-            document.getElementById('side').value = t.side;
-            document.getElementById('lev').value = t.lev;
-            document.getElementById('margin').value = t.margin;
-            document.getElementById('entry').value = t.entry;
+        function openModal(index = null) {
+            const isEdit = index !== null;
+            document.getElementById('editIndex').value = isEdit ? index : "";
+            document.getElementById('modalTitle').innerText = isEdit ? "編輯/平倉交易" : "新增交易";
+            document.getElementById('closeSection').classList.toggle('hidden', !isEdit);
+            document.getElementById('btnDelete').classList.toggle('hidden', !isEdit);
+
+            if (isEdit) {
+                const t = state.trades[index];
+                document.getElementById('symbol').value = t.symbol;
+                document.getElementById('side').value = t.side;
+                document.getElementById('lev').value = t.lev;
+                document.getElementById('margin').value = t.margin;
+                document.getElementById('entry').value = t.entry;
+                document.getElementById('exit').value = t.exit || "";
+            } else {
+                ['symbol', 'entry', 'lev', 'margin', 'exit'].forEach(id => document.getElementById(id).value = "");
+            }
             document.getElementById('tradeModal').classList.add('active');
         }
 
@@ -121,19 +176,43 @@
             const data = {
                 symbol: document.getElementById('symbol').value.toUpperCase(),
                 side: document.getElementById('side').value,
-                lev: document.getElementById('lev').value,
-                margin: document.getElementById('margin').value,
-                entry: document.getElementById('entry').value
+                lev: Number(document.getElementById('lev').value),
+                margin: Number(document.getElementById('margin').value),
+                entry: Number(document.getElementById('entry').value),
+                exit: document.getElementById('exit').value ? Number(document.getElementById('exit').value) : null
             };
+            if(!data.symbol || !data.entry) return alert('資訊不足');
+            
             const idx = document.getElementById('editIndex').value;
             if (idx === "") state.trades.unshift(data);
             else state.trades[idx] = data;
-            closeModal('tradeModal');
+            
+            closeModal();
             render();
         }
 
-        function deleteTrade(i) { if(confirm('確定刪除？')) { state.trades.splice(i, 1); render(); } }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function deleteTrade() {
+            if(confirm('確定刪除此紀錄？')) {
+                state.trades.splice(document.getElementById('editIndex').value, 1);
+                closeModal();
+                render();
+            }
+        }
+
+        function setInitialFund() {
+            const val = prompt("設定初始資金:", state.initial);
+            if (val !== null) { state.initial = Number(val); render(); }
+        }
+
+        function closeModal() { document.getElementById('tradeModal').classList.remove('active'); }
+        
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "crypto_trades.json");
+            downloadAnchorNode.click();
+        }
 
         render();
     </script>
