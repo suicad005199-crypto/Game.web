@@ -1,152 +1,93 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>翻倉交易管理 v4</title>
-<style>
-body { font-family: Arial, sans-serif; margin:0; background:#f0f0f0; color:#333; padding:10px; }
-h2 { text-align:center; color:#ff6600; margin-bottom:10px; }
-
-#balance { font-size:18px; font-weight:bold; text-align:center; margin-bottom:12px; }
-
-.panel { background:#fff; border-radius:12px; padding:12px; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
-
-.form-row { display:flex; flex-direction:column; margin-bottom:10px; gap:5px; }
-@media(min-width:600px){ .form-row{ flex-direction:row; gap:10px;} }
-
-input, select, button { padding:10px; font-size:16px; border-radius:6px; border:1px solid #ccc; }
-button { background:#ff6600; color:#fff; font-weight:bold; cursor:pointer; border:none; }
-button:hover { opacity:0.9; }
-
-.card { background:#fff; border-radius:10px; padding:10px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
-.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-.card-body { display:flex; flex-direction:column; gap:4px; }
-
-.log-box { background:#111; color:#0f0; padding:10px; height:150px; overflow-y:auto; border-radius:10px; font-family:monospace; font-size:14px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Contract Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --slate-blue: #708090;
+            --bg-color: #f4f7f9;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-bottom: 80px; /* 留給底部選單 */
+        }
+        .safe-area-inset { padding-top: env(safe-area-inset-top); }
+        .card-shadow { box-shadow: 0 4px 12px rgba(112, 128, 144, 0.1); }
+        .btn-slate { background-color: var(--slate-blue); color: white; }
+        .tab-active { border-bottom: 3px solid var(--slate-blue); color: var(--slate-blue); font-weight: bold; }
+    </style>
 </head>
 <body>
 
-<h2>翻倉交易管理 v4</h2>
-<div id="balance">帳戶資金: 61.5900 USDT</div>
-
-<!-- Panel1: 資料輸入區 -->
-<div class="panel" id="panel1">
-    <h3>資料輸入區</h3>
-    <div class="form-row">
-        <input type="text" id="symbol" placeholder="幣種/合約 (例如 AAVEUSDT.P)">
-        <select id="side">
-            <option value="多">多</option>
-            <option value="空">空</option>
-        </select>
-        <input type="number" id="leverage" placeholder="槓桿">
-    </div>
-    <div class="form-row">
-        <input type="number" step="any" id="entry" placeholder="進場價">
-        <input type="number" step="any" id="stoploss" placeholder="止損價">
-        <input type="number" step="any" id="takeprofit" placeholder="止盈價">
-    </div>
-    <div class="form-row">
-        <input type="number" id="capitalRatio" placeholder="投入資金比例 0-100%" step="any">
-    </div>
-    <button onclick="addTrade()">新增交易</button>
-</div>
-
-<!-- Panel2: 顯示交易紀錄 -->
-<div class="panel" id="panel2">
-    <h3>交易紀錄</h3>
-    <div id="tradeList"></div>
-</div>
-
-<!-- Log Box -->
-<div class="panel">
-    <h3>Log Box</h3>
-    <div id="logBox" class="log-box"></div>
-</div>
-
-<script>
-let accountBalance = 61.59;
-let tradeCount = 0;
-
-function updateBalanceDisplay(){
-    document.getElementById("balance").textContent = `帳戶資金: ${accountBalance.toFixed(4)} USDT`;
-}
-
-function logMessage(msg){
-    const logBox = document.getElementById("logBox");
-    const timestamp = new Date().toLocaleTimeString();
-    logBox.innerHTML += `[${timestamp}] ${msg}\n`;
-    logBox.scrollTop = logBox.scrollHeight;
-}
-
-function addTrade(){
-    const symbol = document.getElementById("symbol").value.trim();
-    const side = document.getElementById("side").value;
-    const leverage = parseFloat(document.getElementById("leverage").value);
-    const entry = parseFloat(document.getElementById("entry").value);
-    const stoploss = parseFloat(document.getElementById("stoploss").value);
-    const takeprofit = parseFloat(document.getElementById("takeprofit").value);
-    const capitalRatio = parseFloat(document.getElementById("capitalRatio").value);
-
-    if(!symbol || isNaN(leverage)||isNaN(entry)||isNaN(stoploss)||isNaN(takeprofit)||isNaN(capitalRatio)){
-        alert("請填寫完整資料");
-        return;
-    }
-
-    let investedCapital = accountBalance * (capitalRatio/100);
-    accountBalance -= investedCapital;
-    updateBalanceDisplay();
-    tradeCount +=1;
-    logMessage(`新增交易 #${tradeCount} ${symbol} | ${side} | 槓桿:${leverage} | 投入資金:${investedCapital.toFixed(4)} USDT`);
-
-    const tradeList = document.getElementById("tradeList");
-    const card = document.createElement("div");
-    card.className="card";
-    card.innerHTML=`
-        <div class="card-header">
-            <div><strong>#${tradeCount} ${symbol}</strong> | ${side} | ${leverage}X</div>
-            <select onchange="updateStatus(this)">
-                <option value="進行中">進行中</option>
-                <option value="已結束">已結束</option>
-            </select>
-        </div>
-        <div class="card-body">
-            <div>進場: ${entry} | 止損: ${stoploss} | 止盈: ${takeprofit}</div>
+    <header class="bg-[#708090] text-white p-6 rounded-b-[30px] shadow-lg safe-area-inset">
+        <p class="text-sm opacity-80">總權益 (USDT)</p>
+        <h1 class="text-3xl font-bold mt-1">12,450.82</h1>
+        <div class="flex mt-4 space-x-4">
             <div>
-                <input type="number" step="any" placeholder="實際出場價" onchange="closeTrade(this, ${investedCapital}, ${entry}, '${side}')">
+                <p class="text-xs opacity-70">未實現盈虧</p>
+                <p class="text-green-300 font-medium">+420.15 (+3.4%)</p>
             </div>
-            <div>投入資金: ${investedCapital.toFixed(4)} USDT</div>
-            <div>實際盈虧: <span class="profit">0</span> USDT</div>
         </div>
-    `;
-    tradeList.appendChild(card);
+    </header>
 
-    ["symbol","leverage","entry","stoploss","takeprofit","capitalRatio"].forEach(id=>document.getElementById(id).value="");
-}
+    <nav class="flex justify-around bg-white mt-4 border-b">
+        <button class="py-3 px-6 tab-active">當前持倉</button>
+        <button class="py-3 px-6 text-gray-400">歷史紀錄</button>
+    </nav>
 
-function updateStatus(select){
-    const card = select.closest(".card");
-    // 可擴充
-}
+    <main class="p-4 space-y-4">
+        
+        <div class="bg-white p-4 rounded-2xl card-shadow border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <span class="font-bold text-lg">BTCUSDT</span>
+                    <span class="ml-2 text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded">做多 20x</span>
+                </div>
+                <button class="text-gray-400 text-sm">平倉</button>
+            </div>
+            <div class="grid grid-cols-2 gap-y-2 text-sm">
+                <div class="text-gray-500">開倉價格: <span class="text-gray-900">42,500.0</span></div>
+                <div class="text-gray-500 text-right">標記價格: <span class="text-gray-900">43,210.5</span></div>
+                <div class="text-gray-500">盈虧 (USDT): <span class="text-green-500 font-bold">+150.20</span></div>
+                <div class="text-gray-500 text-right">回報率: <span class="text-green-500 font-bold">+35.2%</span></div>
+            </div>
+        </div>
 
-function closeTrade(input, investedCapital, entryPrice, side){
-    const exitPrice = parseFloat(input.value);
-    if(isNaN(exitPrice)) return;
-    let profit = 0;
-    if(side==="多"){
-        profit = (exitPrice - entryPrice)/entryPrice * investedCapital;
-    } else {
-        profit = (entryPrice - exitPrice)/entryPrice * investedCapital;
-    }
-    accountBalance += investedCapital + profit;
-    updateBalanceDisplay();
-    const card = input.closest(".card");
-    card.querySelector(".profit").textContent = profit.toFixed(4);
-    input.disabled = true;
-    logMessage(`交易結束 #${card.querySelector("strong").textContent} | 實際盈虧: ${profit.toFixed(4)} USDT`);
-}
-</script>
+        <div class="bg-white p-4 rounded-2xl card-shadow border-l-4 border-red-500">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <span class="font-bold text-lg">ETHUSDT</span>
+                    <span class="ml-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">做空 10x</span>
+                </div>
+                <button class="text-gray-400 text-sm">平倉</button>
+            </div>
+            <div class="grid grid-cols-2 gap-y-2 text-sm">
+                <div class="text-gray-500">開倉價格: <span class="text-gray-900">2,300.5</span></div>
+                <div class="text-gray-500 text-right">標記價格: <span class="text-gray-900">2,350.2</span></div>
+                <div class="text-gray-500">盈虧 (USDT): <span class="text-red-500 font-bold">-45.80</span></div>
+                <div class="text-gray-500 text-right">回報率: <span class="text-red-500 font-bold">-19.4%</span></div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-3 px-2 pb-6 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <div class="flex flex-col items-center text-slate-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span class="text-[10px] mt-1">資產</span>
+        </div>
+        <button class="btn-slate px-8 py-3 rounded-full font-bold shadow-md -mt-10 border-4 border-[#f4f7f9]">
+            + 新增交易
+        </button>
+        <div class="flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+            <span class="text-[10px] mt-1">設定</span>
+        </div>
+    </footer>
 
 </body>
 </html>
