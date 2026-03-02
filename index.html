@@ -3,34 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>翻倉交易管理</title>
+<title>翻倉交易管理 v4</title>
 <style>
-    body { font-family: Arial, sans-serif; margin: 0; background-color: #f5f5f5; color: #333; padding: 10px; }
-    h2 { text-align: center; color: #ff6600; }
-    input, select, button { padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; }
-    button { background-color: #ff6600; color: #fff; border: none; font-weight: bold; cursor: pointer; }
-    button:hover { opacity: 0.9; }
+body { font-family: Arial, sans-serif; margin:0; background:#f0f0f0; color:#333; padding:10px; }
+h2 { text-align:center; color:#ff6600; margin-bottom:10px; }
 
-    .card { background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .card-body { display: flex; flex-direction: column; gap: 6px; }
-    .card-body input, .card-body select { width: 100%; box-sizing: border-box; }
+#balance { font-size:18px; font-weight:bold; text-align:center; margin-bottom:12px; }
 
-    .form-row { display: flex; flex-direction: column; margin-bottom: 10px; gap: 5px; }
-    @media(min-width: 600px){ .form-row { flex-direction: row; gap: 10px; } }
+.panel { background:#fff; border-radius:12px; padding:12px; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
 
-    .tp-inputs { display: flex; flex-direction: column; gap: 5px; }
-    @media(min-width: 500px){ .tp-inputs { flex-direction: row; gap: 10px; } }
+.form-row { display:flex; flex-direction:column; margin-bottom:10px; gap:5px; }
+@media(min-width:600px){ .form-row{ flex-direction:row; gap:10px;} }
 
-    #balance { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 12px; }
+input, select, button { padding:10px; font-size:16px; border-radius:6px; border:1px solid #ccc; }
+button { background:#ff6600; color:#fff; font-weight:bold; cursor:pointer; border:none; }
+button:hover { opacity:0.9; }
+
+.card { background:#fff; border-radius:10px; padding:10px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.card-body { display:flex; flex-direction:column; gap:4px; }
+
+.log-box { background:#111; color:#0f0; padding:10px; height:150px; overflow-y:auto; border-radius:10px; font-family:monospace; font-size:14px; }
 </style>
 </head>
 <body>
 
-<h2>翻倉交易管理</h2>
+<h2>翻倉交易管理 v4</h2>
 <div id="balance">帳戶資金: 61.5900 USDT</div>
 
-<div id="form">
+<!-- Panel1: 資料輸入區 -->
+<div class="panel" id="panel1">
+    <h3>資料輸入區</h3>
     <div class="form-row">
         <input type="text" id="symbol" placeholder="幣種/合約 (例如 AAVEUSDT.P)">
         <select id="side">
@@ -42,11 +45,7 @@
     <div class="form-row">
         <input type="number" step="any" id="entry" placeholder="進場價">
         <input type="number" step="any" id="stoploss" placeholder="止損價">
-    </div>
-    <div class="tp-inputs">
-        <input type="number" step="any" id="tp1" placeholder="TP1">
-        <input type="number" step="any" id="tp2" placeholder="TP2">
-        <input type="number" step="any" id="tp3" placeholder="TP3">
+        <input type="number" step="any" id="takeprofit" placeholder="止盈價">
     </div>
     <div class="form-row">
         <input type="number" id="capitalRatio" placeholder="投入資金比例 0-100%" step="any">
@@ -54,42 +53,57 @@
     <button onclick="addTrade()">新增交易</button>
 </div>
 
-<div id="tradeList"></div>
+<!-- Panel2: 顯示交易紀錄 -->
+<div class="panel" id="panel2">
+    <h3>交易紀錄</h3>
+    <div id="tradeList"></div>
+</div>
+
+<!-- Log Box -->
+<div class="panel">
+    <h3>Log Box</h3>
+    <div id="logBox" class="log-box"></div>
+</div>
 
 <script>
 let accountBalance = 61.59;
 let tradeCount = 0;
 
-function updateBalanceDisplay() {
+function updateBalanceDisplay(){
     document.getElementById("balance").textContent = `帳戶資金: ${accountBalance.toFixed(4)} USDT`;
 }
 
-function addTrade() {
+function logMessage(msg){
+    const logBox = document.getElementById("logBox");
+    const timestamp = new Date().toLocaleTimeString();
+    logBox.innerHTML += `[${timestamp}] ${msg}\n`;
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+function addTrade(){
     const symbol = document.getElementById("symbol").value.trim();
     const side = document.getElementById("side").value;
     const leverage = parseFloat(document.getElementById("leverage").value);
     const entry = parseFloat(document.getElementById("entry").value);
     const stoploss = parseFloat(document.getElementById("stoploss").value);
-    const tp1 = parseFloat(document.getElementById("tp1").value);
-    const tp2 = parseFloat(document.getElementById("tp2").value);
-    const tp3 = parseFloat(document.getElementById("tp3").value);
+    const takeprofit = parseFloat(document.getElementById("takeprofit").value);
     const capitalRatio = parseFloat(document.getElementById("capitalRatio").value);
 
-    if (!symbol || isNaN(leverage) || isNaN(entry) || isNaN(stoploss) || isNaN(capitalRatio)) {
+    if(!symbol || isNaN(leverage)||isNaN(entry)||isNaN(stoploss)||isNaN(takeprofit)||isNaN(capitalRatio)){
         alert("請填寫完整資料");
         return;
     }
 
-    let investedCapital = accountBalance * (capitalRatio / 100);
+    let investedCapital = accountBalance * (capitalRatio/100);
     accountBalance -= investedCapital;
     updateBalanceDisplay();
-    tradeCount += 1;
+    tradeCount +=1;
+    logMessage(`新增交易 #${tradeCount} ${symbol} | ${side} | 槓桿:${leverage} | 投入資金:${investedCapital.toFixed(4)} USDT`);
 
     const tradeList = document.getElementById("tradeList");
-
     const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
+    card.className="card";
+    card.innerHTML=`
         <div class="card-header">
             <div><strong>#${tradeCount} ${symbol}</strong> | ${side} | ${leverage}X</div>
             <select onchange="updateStatus(this)">
@@ -98,38 +112,39 @@ function addTrade() {
             </select>
         </div>
         <div class="card-body">
-            <div>進場價: ${entry} | 止損: ${stoploss}</div>
-            <div class="tp-inputs">
-                <input type="number" step="any" placeholder="TP1盈虧" onchange="updateTP(this, ${investedCapital})">
-                <input type="number" step="any" placeholder="TP2盈虧" onchange="updateTP(this, ${investedCapital})">
-                <input type="number" step="any" placeholder="TP3盈虧" onchange="updateTP(this, ${investedCapital})">
+            <div>進場: ${entry} | 止損: ${stoploss} | 止盈: ${takeprofit}</div>
+            <div>
+                <input type="number" step="any" placeholder="實際出場價" onchange="closeTrade(this, ${investedCapital}, ${entry}, '${side}')">
             </div>
             <div>投入資金: ${investedCapital.toFixed(4)} USDT</div>
+            <div>實際盈虧: <span class="profit">0</span> USDT</div>
         </div>
     `;
     tradeList.appendChild(card);
 
-    // 清空表單
-    ["symbol","leverage","entry","stoploss","tp1","tp2","tp3","capitalRatio"].forEach(id => document.getElementById(id).value = "");
+    ["symbol","leverage","entry","stoploss","takeprofit","capitalRatio"].forEach(id=>document.getElementById(id).value="");
 }
 
-function updateStatus(select) {
+function updateStatus(select){
     const card = select.closest(".card");
-    const status = select.value;
-    if (status === "已結束") {
-        const inputs = card.querySelectorAll(".tp-inputs input");
-        inputs.forEach(input => {
-            if (input.value) updateTP(input, parseFloat(card.querySelector("div:contains('投入資金')").textContent.split(":")[1]));
-        });
-    }
+    // 可擴充
 }
 
-function updateTP(input, investedCapital) {
-    const profit = parseFloat(input.value);
-    if (isNaN(profit)) return;
-    accountBalance += profit;
+function closeTrade(input, investedCapital, entryPrice, side){
+    const exitPrice = parseFloat(input.value);
+    if(isNaN(exitPrice)) return;
+    let profit = 0;
+    if(side==="多"){
+        profit = (exitPrice - entryPrice)/entryPrice * investedCapital;
+    } else {
+        profit = (entryPrice - exitPrice)/entryPrice * investedCapital;
+    }
+    accountBalance += investedCapital + profit;
     updateBalanceDisplay();
-    input.disabled = true; // 防止重複修改
+    const card = input.closest(".card");
+    card.querySelector(".profit").textContent = profit.toFixed(4);
+    input.disabled = true;
+    logMessage(`交易結束 #${card.querySelector("strong").textContent} | 實際盈虧: ${profit.toFixed(4)} USDT`);
 }
 </script>
 
