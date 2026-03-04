@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="format-detection" content="telephone=no">
+    <meta name="description" content="星雲遊戲館 - 最安全的遊戲入口">
     <title>遊戲大廳</title>
     <style>
         :root {
@@ -18,7 +19,7 @@
 
         * {
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent; /* 移除點擊灰色外框 */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -42,14 +43,12 @@
             margin: 0;
         }
 
-        /* 遊戲網格：單手操作優化 (2欄佈局) */
         .game-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
 
-        /* 卡片設計：符合 iOS 圓角與陰影 */
         .game-card {
             background: var(--card-bg);
             border-radius: 20px;
@@ -57,12 +56,10 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            /* 輕微投影 */
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
         }
 
-        /* 觸碰時的反饋感 (Scale Down) */
         .game-card:active {
             transform: scale(0.94);
             filter: brightness(0.9);
@@ -70,7 +67,7 @@
 
         .card-image {
             width: 100%;
-            aspect-ratio: 1 / 1; /* 保持正方形 */
+            aspect-ratio: 1 / 1;
             object-fit: cover;
             background-color: #E5E5EA;
         }
@@ -85,7 +82,6 @@
             font-weight: 600;
             color: var(--primary-text);
             margin-bottom: 2px;
-            /* 防止標題過長 */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -101,7 +97,6 @@
             display: inline-block;
         }
 
-        /* 骨架屏動畫 (Loading 效果) */
         @keyframes skeleton-loading {
             0% { background-color: #E5E5EA; }
             50% { background-color: #D1D1D6; }
@@ -134,7 +129,7 @@
                     .sort((a, b) => a.sort_order - b.sort_order)
                     .map(game => `
                         <a href="go.html?game=${game.slug}" class="game-card">
-                            <img src="${game.cover_image_url}" class="card-image" loading="lazy">
+                            <img src="${game.cover_image_url}" alt="${game.title} 遊戲封面" class="card-image" loading="lazy">
                             <div class="card-info">
                                 <span class="card-title">${game.title}</span>
                                 <span class="card-tag">${game.tags[0] || '遊戲'}</span>
