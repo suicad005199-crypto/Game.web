@@ -2,7 +2,8 @@
   "meta": {
     "brand_name": "星雲遊戲館",
     "official_domain": "games.yourdomain.com",
-    "support_contact": "support@example.com"
+    "support_contact": "support@example.com",
+    "updated_at": "2026-03-04T12:00:00Z"
   },
   "games": [
     {
@@ -11,7 +12,7 @@
       "title": "星際遠征",
       "description": "探索未知的銀河系",
       "cover_image_url": "https://picsum.photos/seed/g1/400/300",
-      "target_url": "https://game-a.com",
+      "target_url": "https://game-star-war.com",
       "tags": ["冒險", "科幻"],
       "is_published": true,
       "sort_order": 1
@@ -22,7 +23,7 @@
       "title": "方塊大師",
       "description": "挑戰你的腦力極限",
       "cover_image_url": "https://picsum.photos/seed/g2/400/300",
-      "target_url": "https://game-b.io",
+      "target_url": "https://game-puzzle-master.com",
       "tags": ["益智"],
       "is_published": true,
       "sort_order": 2
