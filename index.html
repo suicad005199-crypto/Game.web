@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>星雲娛樂城</title>
 <style>
-body { font-family:-apple-system; margin:0; padding:20px; background:#F2F2F7;}
-.grid { display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-.card { background:#fff; border-radius:16px; text-decoration:none; color:#000; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.05);}
-.card img { width:100%; aspect-ratio:1/1; object-fit:cover;}
-.card .info { padding:10px;}
+body{font-family:-apple-system;margin:0;padding:20px;background:#F2F2F7;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.card{background:#fff;border-radius:16px;text-decoration:none;color:#000;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+.card img{width:100%;aspect-ratio:1/1;object-fit:cover;}
+.card .info{padding:10px;}
 </style>
 </head>
 <body>
@@ -19,20 +19,18 @@ body { font-family:-apple-system; margin:0; padding:20px; background:#F2F2F7;}
 
 <script>
 async function init(){
-    const res = await fetch('/data/games.json');
+    const res = await fetch('./data/games.json');
     const data = await res.json();
 
     document.getElementById('brand').textContent = data.meta.brand_name;
 
     const html = data.games
-        .filter(g => g.is_published)
+        .filter(g=>g.is_published)
         .sort((a,b)=>a.sort_order-b.sort_order)
-        .map(g => `
+        .map(g=>`
             <a href="go.html?game=${encodeURIComponent(g.slug)}" class="card">
                 <img src="${g.cover_image_url}" loading="lazy">
-                <div class="info">
-                    <strong>${g.title}</strong>
-                </div>
+                <div class="info"><strong>${g.title}</strong></div>
             </a>
         `).join('');
 
