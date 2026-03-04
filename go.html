@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>安全驗證中</title>
 <style>
-body { font-family:-apple-system; display:flex; align-items:center; justify-content:center; height:100vh; background:#F2F2F7;}
-.box { background:#fff; padding:30px; border-radius:16px; text-align:center; width:300px;}
-button { padding:12px; width:100%; background:#007AFF; border:none; color:#fff; border-radius:10px;}
+body{font-family:-apple-system;display:flex;align-items:center;justify-content:center;height:100vh;background:#F2F2F7;}
+.box{background:#fff;padding:30px;border-radius:16px;text-align:center;width:320px;}
+button{padding:12px;width:100%;background:#007AFF;border:none;color:#fff;border-radius:10px;}
+.error{color:#FF3B30;}
 </style>
 </head>
 <body>
@@ -17,37 +18,58 @@ button { padding:12px; width:100%; background:#007AFF; border:none; color:#fff; 
 </div>
 
 <script>
-async function redirectGame(){
+const allowedDomains = [
+    "game-star-war.com",
+    "game-puzzle-master.com"
+];
+
+function base64Decode(str){
+    return decodeURIComponent(escape(window.atob(str)));
+}
+
+async function secureRedirect(){
     const slug = new URLSearchParams(location.search).get('game');
     const app = document.getElementById('app');
 
     if(!slug){
-        app.innerHTML = "<p>參數錯誤</p>";
+        app.innerHTML="<p class='error'>參數錯誤</p>";
         return;
     }
 
     try{
-        const res = await fetch('/api/redirect', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ slug })
-        });
+        const res = await fetch('./data/targets.json');
+        const targets = await res.json();
 
-        const data = await res.json();
-
-        if(data.success){
-            app.innerHTML = `
-                <p>即將前往 ${data.title}</p>
-                <button onclick="location.href='${data.redirect_url}'">確認進入</button>
-            `;
-        }else{
-            app.innerHTML = "<p>遊戲不可用</p>";
+        if(!targets[slug]){
+            app.innerHTML="<p class='error'>遊戲不存在</p>";
+            return;
         }
+
+        const url = base64Decode(targets[slug]);
+
+        if(!url.startsWith("https://")){
+            app.innerHTML="<p class='error'>不安全連結</p>";
+            return;
+        }
+
+        const domain = new URL(url).hostname;
+
+        if(!allowedDomains.includes(domain)){
+            app.innerHTML="<p class='error'>未授權網域</p>";
+            return;
+        }
+
+        app.innerHTML=`
+            <p>即將前往<br><strong>${domain}</strong></p>
+            <button onclick="location.href='${url}'">確認進入</button>
+        `;
+
     }catch(e){
-        app.innerHTML = "<p>系統錯誤</p>";
+        app.innerHTML="<p class='error'>系統錯誤</p>";
     }
 }
-redirectGame();
+
+secureRedirect();
 </script>
 
 </body>
