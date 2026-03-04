@@ -12,7 +12,7 @@
         .spinner { width: 40px; height: 40px; border: 3px solid #E5E5EA; border-top: 3px solid #007AFF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         h3 { margin: 10px 0; font-size: 20px; }
-        p { color: #8E8E93; font-size: 14px; }
+        p { color: #8E8E93; font-size: 14px; line-height: 1.5; }
         .btn { display: block; margin-top: 25px; padding: 14px; background: #007AFF; color: #FFF; text-decoration: none; border-radius: 12px; font-weight: 600; }
     </style>
 </head>
@@ -25,13 +25,13 @@
     <script>
         const SUPABASE_URL = https://hanyrygfyalbcdmeodyv.supabase.co;
         const SUPABASE_KEY = sb_publishable_qI3Gfqt6tRG9whlmsl1oqA_ZaBndPN4;
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function checkAndRedirect() {
+        async function verify() {
             const slug = new URLSearchParams(location.search).get('game');
             const app = document.getElementById('app');
 
-            const { data: game, error } = await supabase
+            const { data: game, error } = await supabaseClient
                 .from('games')
                 .select('*')
                 .eq('slug', slug)
@@ -39,7 +39,7 @@
 
             if (game && game.is_published) {
                 if (!game.target_url.startsWith('https://')) {
-                    app.innerHTML = `<h3 style="color:#FF3B30">安全阻擋</h3><p>此連結不符合 HTTPS 加密規範</p><a href="index.html" class="btn">返回大廳</a>`;
+                    app.innerHTML = `<h3 style="color:#FF3B30">安全阻擋</h3><p>目標網址不安全 (非 HTTPS)</p><a href="index.html" class="btn">返回大廳</a>`;
                     return;
                 }
                 const domain = new URL(game.target_url).hostname;
@@ -52,7 +52,7 @@
                 app.innerHTML = `<h3 style="color:#FF3B30">連結無效</h3><p>遊戲已下架或網址錯誤</p><a href="index.html" class="btn" style="background:#8E8E93">返回大廳</a>`;
             }
         }
-        checkAndRedirect();
+        verify();
     </script>
 </body>
 </html>
