@@ -1,4 +1,10 @@
 {
-  "star-war": "aHR0cHM6Ly9nYW1lLXN0YXItd2FyLmNvbQ==",
-  "puzzle-master": "aHR0cHM6Ly9nYW1lLXB1enpsZS1tYXN0ZXIuY29t"
+  "star-war": {
+    "url": "aHR0cHM6Ly9nYW1lLXN0YXItd2FyLmNvbQ==",
+    "signature": "a1b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdef"
+  },
+  "puzzle-master": {
+    "url": "aHR0cHM6Ly9nYW1lLXB1enpsZS1tYXN0ZXIuY29t",
+    "signature": "abcdef1234567890a1b2c3d4e5f678901234567890abcdef1234567890abcdef"
+  }
 }
