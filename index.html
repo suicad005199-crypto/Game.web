@@ -1,191 +1,146 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Crypto Tracker v4</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>五分化訓練紀錄</title>
     <style>
-        :root { --slate-blue: #708090; }
-        body { background-color: #f8fafc; font-family: -apple-system, sans-serif; padding-bottom: 100px; }
-        .slate-bg { background-color: var(--slate-blue); }
-        .slate-text { color: var(--slate-blue); }
-        .modal { display: none; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-        .modal.active { display: flex; }
-        .tab-btn { flex: 1; text-align: center; font-size: 13px; color: #94a3b8; padding: 12px 0; border-bottom: 2px solid transparent; }
-        .tab-active { border-bottom: 3px solid var(--slate-blue); color: var(--slate-blue); font-weight: bold; }
-        input, select { outline: none; transition: 0.2s; }
-        input:focus { border: 1px solid var(--slate-blue); }
+        :root {
+            --primary: #6B8EAD; /* 霧藍 */
+            --bg: #F0F2F5;
+            --card-bg: #FFFFFF;
+            --text-main: #2C3E50;
+            --text-sub: #7F8C8D;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px 16px 100px 16px;
+        }
+
+        h1 { font-size: 26px; font-weight: 800; margin-bottom: 24px; color: var(--primary); text-align: center; }
+
+        .day-section { margin-bottom: 28px; }
+        .day-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 0.5px solid #F0F0F0;
+        }
+
+        .item:last-child { border-bottom: none; }
+        .item:active { background-color: #F9F9F9; }
+
+        .content { flex: 1; }
+        .name { font-size: 16px; font-weight: 600; display: block; }
+        .detail { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+
+        .abs-tag {
+            font-size: 10px; background: #E1E8EE; color: var(--primary);
+            padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+        }
+
+        /* Checkbox 外觀 */
+        .cb-container {
+            width: 26px; height: 26px;
+            border: 2px solid #D1D1D6;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-left: 12px; transition: 0.2s;
+        }
+
+        input[type="checkbox"] { display: none; }
+        
+        input[type="checkbox"]:checked + .cb-container {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        input[type="checkbox"]:checked + .cb-container::after {
+            content: '✓'; color: white; font-weight: bold; font-size: 14px;
+        }
+
+        .footer-btn {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            width: 200px; background: var(--primary);
+            color: white; border: none; padding: 14px;
+            border-radius: 25px; font-weight: 600;
+            box-shadow: 0 8px 15px rgba(107, 142, 173, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <header class="slate-bg text-white p-6 rounded-b-[35px] shadow-lg sticky top-0 z-50">
-        <div class="flex justify-between items-end">
-            <div>
-                <p class="text-[10px] opacity-70 mb-1">總實現盈虧 (USDT)</p>
-                <h1 id="totalPnl" class="text-3xl font-mono font-bold">0.00</h1>
-            </div>
-            <div class="text-right">
-                <p class="text-[10px] opacity-70">勝率 / 初始資金</p>
-                <p class="font-medium"><span id="winRate">0%</span> · <span id="initDisplay">0</span></p>
-            </div>
-        </div>
-    </header>
+    <h1>五分化訓練</h1>
 
-    <nav class="flex bg-white shadow-sm sticky top-[108px] z-40">
-        <button onclick="switchTab('active')" id="tabActive" class="tab-btn tab-active">當前持倉</button>
-        <button onclick="switchTab('recent')" id="tabRecent" class="tab-btn">近 10 筆</button>
-        <button onclick="switchTab('history')" id="tabHistory" class="tab-btn">全部歷史</button>
-    </nav>
+    <div id="app"></div>
 
-    <main id="tradeList" class="p-4 space-y-3"></main>
-
-    <div id="tradeModal" class="modal fixed inset-0 z-[60] items-end">
-        <div class="bg-white w-full rounded-t-[30px] p-6 shadow-2xl animate-slide-up">
-            <div class="flex justify-between mb-5">
-                <h2 id="modalTitle" class="text-lg font-bold slate-text">交易詳情</h2>
-                <button onclick="closeModal()" class="text-gray-300 text-2xl">&times;</button>
-            </div>
-            <input type="hidden" id="editIndex">
-            
-            <div class="space-y-4">
-                <div class="flex gap-2">
-                    <input id="symbol" type="text" placeholder="幣種 (BTC)" class="w-full p-4 rounded-xl bg-gray-50 uppercase">
-                    <select id="side" class="p-4 rounded-xl bg-gray-50">
-                        <option value="Long">做多</option>
-                        <option value="Short">做空</option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <input id="lev" type="number" placeholder="槓桿" class="w-1/3 p-4 rounded-xl bg-gray-50">
-                    <input id="margin" type="number" placeholder="保證金" class="w-2/3 p-4 rounded-xl bg-gray-50">
-                </div>
-                <input id="entry" type="number" placeholder="進場價位" class="w-full p-4 rounded-xl bg-gray-50">
-                
-                <div id="closeSection" class="hidden border-t pt-4">
-                    <p class="text-[10px] text-slate-400 mb-2 font-bold">出場平倉</p>
-                    <input id="exit" type="number" placeholder="出場價位 (留空則維持持倉)" class="w-full p-4 rounded-xl bg-blue-50 border border-blue-100">
-                </div>
-            </div>
-
-            <div class="flex gap-3 mt-8">
-                <button id="btnDelete" onclick="deleteTrade()" class="hidden px-4 text-red-400 text-sm">刪除</button>
-                <button onclick="saveTrade()" class="flex-1 slate-bg text-white py-4 rounded-2xl font-bold shadow-lg">儲存紀錄</button>
-            </div>
-        </div>
-    </div>
-
-    <footer class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t flex justify-around items-center py-3 pb-8 px-6 z-50">
-        <button onclick="setInitialFund()" class="flex flex-col items-center slate-text">
-            <span class="text-xl">🏦</span>
-            <span class="text-[10px] font-bold">初始資金</span>
-        </button>
-        <button onclick="openModal()" class="slate-bg text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl -mt-12 border-[6px] border-[#f8fafc]">
-            <span class="text-2xl">+</span>
-        </button>
-        <button onclick="exportJSON()" class="flex flex-col items-center text-gray-400">
-            <span class="text-xl">💾</span>
-            <span class="text-[10px] font-bold">備份</span>
-        </button>
-    </footer>
+    <button class="footer-btn" onclick="reset()">重置本週進度</button>
 
     <script>
-        let state = JSON.parse(localStorage.getItem('crypto_v4')) || { initial: 0, trades: [], tab: 'active' };
+        const workoutData = [
+            { day: "Day 1：胸部 + 腹部", list: [
+                ["上斜啞鈴推舉", "3組 10-12次"], ["平板臥推", "3組 8-10次"], ["繩索飛鳥", "3組 12-15次"], ["伏地挺身", "3組 力竭"], ["懸垂舉腿", "3組 15次", true]
+            ]},
+            { day: "Day 2：背部 + 腹部", list: [
+                ["坐姿下拉", "3組 10-12次"], ["器械划船", "3組 10-12次"], ["繩索直臂下壓", "3組 12-15次"], ["繩索面拉", "3組 15次"], ["捲腹 (Crunches)", "3組 20次", true]
+            ]},
+            { day: "Day 3：肩部 + 腹部", list: [
+                ["啞鈴肩推", "3組 8-10次"], ["啞鈴側平舉", "4組 15次"], ["繩索側平舉", "3組 15次"], ["啞鈴聳肩", "3組 12次"], ["俄羅斯轉體", "3組 每側15次", true]
+            ]},
+            { day: "Day 4：腿部 + 腹部", list: [
+                ["深蹲", "3組 8-10次"], ["腿舉 (Leg Press)", "3組 12次"], ["腿屈伸", "3組 15次"], ["腿彎舉", "3組 15次"], ["平板支撐 (Plank)", "3組 60秒", true]
+            ]},
+            { day: "Day 5：手臂 + 腹部", list: [
+                ["啞鈴彎舉", "3組 12次"], ["垂式彎舉", "3組 12次"], ["繩索下壓", "3組 12次"], ["仰臥臂屈伸", "3組 12次"], ["自行車捲腹", "3組 20次", true]
+            ]}
+        ];
 
         function render() {
-            const list = document.getElementById('tradeList');
-            let data = [];
-            
-            if (state.tab === 'active') data = state.trades.filter(t => !t.exit);
-            else if (state.tab === 'recent') data = state.trades.filter(t => t.exit).slice(0, 10);
-            else data = state.trades.filter(t => t.exit);
-
-            list.innerHTML = data.length ? '' : `<p class="text-center text-gray-300 pt-20 text-sm">此分類尚無紀錄</p>`;
-            
-            const history = state.trades.filter(t => t.exit);
-            const totalPnl = history.reduce((s, t) => s + calc(t), 0);
-            const wins = history.filter(t => calc(t) > 0).length;
-
-            data.forEach((t) => {
-                const pnl = calc(t);
-                const color = t.side === 'Long' ? 'green' : 'red';
-                list.innerHTML += `
-                    <div onclick="openModal(${state.trades.indexOf(t)})" class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-${color}-500 flex justify-between items-center active:scale-95 transition-transform">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-slate-800">${t.symbol}</span>
-                                <span class="text-[9px] bg-${color}-50 text-${color}-600 px-1.5 py-0.5 rounded font-black">${t.side} ${t.lev}x</span>
+            let html = '';
+            workoutData.forEach((d, dIdx) => {
+                html += `<div class="day-section"><div class="day-title">${d.day}</div><div class="card">`;
+                d.list.forEach((ex, exIdx) => {
+                    const id = `item-${dIdx}-${exIdx}`;
+                    const checked = localStorage.getItem(id) === 'true' ? 'checked' : '';
+                    html += `
+                        <label class="item" for="${id}">
+                            <div class="content">
+                                <span class="name">${ex[0]}${ex[2] ? '<span class="abs-tag">腹肌</span>' : ''}</span>
+                                <span class="detail">${ex[1]}</span>
                             </div>
-                            <div class="text-[10px] text-slate-400 mt-1">進: ${t.entry} ${t.exit ? ' / 出: '+t.exit : ''}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="${pnl >= 0 ? 'text-green-500' : 'text-red-500'} font-bold font-mono">${t.exit ? (pnl >= 0 ? '+' : '') + pnl.toFixed(2) : '持倉中'}</div>
-                            <div class="text-[9px] text-slate-300">保證金: ${t.margin}</div>
-                        </div>
-                    </div>`;
+                            <input type="checkbox" id="${id}" ${checked} onchange="save('${id}', this.checked)">
+                            <div class="cb-container"></div>
+                        </label>`;
+                });
+                html += `</div></div>`;
             });
-
-            document.getElementById('totalPnl').innerText = totalPnl.toFixed(2);
-            document.getElementById('initDisplay').innerText = state.initial;
-            document.getElementById('winRate').innerText = history.length ? Math.round((wins/history.length)*100)+'%' : '0%';
-            localStorage.setItem('crypto_v4', JSON.stringify(state));
+            document.getElementById('app').innerHTML = html;
         }
 
-        function calc(t) {
-            if (!t.exit) return 0;
-            const diff = t.side === 'Long' ? (t.exit - t.entry) : (t.entry - t.exit);
-            return (diff / t.entry) * t.margin * t.lev;
-        }
+        function save(id, val) { localStorage.setItem(id, val); }
 
-        function switchTab(t) {
-            state.tab = t;
-            ['active', 'recent', 'history'].forEach(id => {
-                document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1)).className = `tab-btn ${t === id ? 'tab-active' : ''}`;
-            });
-            render();
-        }
-
-        function openModal(idx = null) {
-            const isEdit = idx !== null;
-            document.getElementById('editIndex').value = isEdit ? idx : "";
-            document.getElementById('modalTitle').innerText = isEdit ? "編輯/平倉" : "新增交易";
-            document.getElementById('closeSection').classList.toggle('hidden', !isEdit);
-            document.getElementById('btnDelete').classList.toggle('hidden', !isEdit);
-            if (isEdit) {
-                const t = state.trades[idx];
-                document.getElementById('symbol').value = t.symbol;
-                document.getElementById('side').value = t.side;
-                document.getElementById('lev').value = t.lev;
-                document.getElementById('margin').value = t.margin;
-                document.getElementById('entry').value = t.entry;
-                document.getElementById('exit').value = t.exit || "";
-            } else {
-                ['symbol','entry','lev','margin','exit'].forEach(id => document.getElementById(id).value = "");
+        function reset() {
+            if(confirm('確定清除紀錄？')) {
+                localStorage.clear();
+                render();
             }
-            document.getElementById('tradeModal').classList.add('active');
         }
-
-        function saveTrade() {
-            const d = {
-                symbol: document.getElementById('symbol').value.toUpperCase(),
-                side: document.getElementById('side').value,
-                lev: Number(document.getElementById('lev').value),
-                margin: Number(document.getElementById('margin').value),
-                entry: Number(document.getElementById('entry').value),
-                exit: document.getElementById('exit').value ? Number(document.getElementById('exit').value) : null
-            };
-            if(!d.symbol || !d.entry || !d.margin) return alert('請填寫完整');
-            const idx = document.getElementById('editIndex').value;
-            if (idx === "") state.trades.unshift(d);
-            else state.trades[idx] = d;
-            closeModal(); render();
-        }
-
-        function deleteTrade() { if(confirm('刪除？')) { state.trades.splice(document.getElementById('editIndex').value, 1); closeModal(); render(); } }
-        function closeModal() { document.getElementById('tradeModal').classList.remove('active'); }
-        function setInitialFund() { const v = prompt("設定初始資金:", state.initial); if(v!==null){state.initial=Number(v); render();} }
-        function exportJSON() { alert("資料已保存在瀏覽器。JSON 導出中..."); console.log(JSON.stringify(state)); }
 
         render();
     </script>
