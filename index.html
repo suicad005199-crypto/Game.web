@@ -2,147 +2,120 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>五分化訓練紀錄</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>遊戲入口</title>
     <style>
         :root {
-            --primary: #6B8EAD; /* 霧藍 */
-            --bg: #F0F2F5;
+            --bg-color: #F2F2F7; /* iOS 系統背景色 */
             --card-bg: #FFFFFF;
-            --text-main: #2C3E50;
-            --text-sub: #7F8C8D;
+            --primary-text: #000000;
+            --secondary-text: #8E8E93;
+            --accent-color: #007AFF; /* iOS 藍 */
         }
 
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
+        body {
             margin: 0;
-            padding: 20px 16px 100px 16px;
+            padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text);
         }
 
-        h1 { font-size: 26px; font-weight: 800; margin-bottom: 24px; color: var(--primary); text-align: center; }
+        header {
+            padding: 20px 0;
+            text-align: left;
+        }
 
-        .day-section { margin-bottom: 28px; }
-        .day-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
+        header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+        }
 
-        .card {
+        /* 遊戲卡片容器 */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        /* 卡片樣式 */
+        .game-card {
             background: var(--card-bg);
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .item {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
             display: flex;
-            align-items: center;
-            padding: 16px;
-            border-bottom: 0.5px solid #F0F0F0;
+            flex-direction: column;
+            -webkit-tap-highlight-color: transparent; /* 移除 iOS 點擊高亮 */
         }
 
-        .item:last-child { border-bottom: none; }
-        .item:active { background-color: #F9F9F9; }
-
-        .content { flex: 1; }
-        .name { font-size: 16px; font-weight: 600; display: block; }
-        .detail { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
-
-        .abs-tag {
-            font-size: 10px; background: #E1E8EE; color: var(--primary);
-            padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+        .game-card:active {
+            transform: scale(0.96); /* 點擊縮放效果 */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
 
-        /* Checkbox 外觀 */
-        .cb-container {
-            width: 26px; height: 26px;
-            border: 2px solid #D1D1D6;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin-left: 12px; transition: 0.2s;
+        /* 遊戲封面圖 */
+        .card-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #E5E5EA;
+            object-fit: cover;
         }
 
-        input[type="checkbox"] { display: none; }
-        
-        input[type="checkbox"]:checked + .cb-container {
-            background-color: var(--primary);
-            border-color: var(--primary);
+        /* 遊戲文字資訊 */
+        .card-info {
+            padding: 12px;
         }
 
-        input[type="checkbox"]:checked + .cb-container::after {
-            content: '✓'; color: white; font-weight: bold; font-size: 14px;
+        .card-title {
+            display: block;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--primary-text);
+            margin-bottom: 4px;
         }
 
-        .footer-btn {
-            position: fixed; bottom: 30px; left: 50%;
-            transform: translateX(-50%);
-            width: 200px; background: var(--primary);
-            color: white; border: none; padding: 14px;
-            border-radius: 25px; font-weight: 600;
-            box-shadow: 0 8px 15px rgba(107, 142, 173, 0.3);
+        .card-tag {
+            font-size: 13px;
+            color: var(--secondary-text);
+            font-weight: 400;
         }
     </style>
 </head>
 <body>
 
-    <h1>五分化訓練</h1>
+    <header>
+        <h1>遊戲館</h1>
+    </header>
 
-    <div id="app"></div>
+    <main class="game-grid">
+        <a href="game1-url" class="game-card">
+            <img src="https://picsum.photos/seed/game1/300/300" alt="遊戲 A" class="card-image">
+            <div class="card-info">
+                <span class="card-title">星際遠征</span>
+                <span class="card-tag">冒險</span>
+            </div>
+        </a>
 
-    <button class="footer-btn" onclick="reset()">重置本週進度</button>
+        <a href="game2-url" class="game-card">
+            <img src="https://picsum.photos/seed/game2/300/300" alt="遊戲 B" class="card-image">
+            <div class="card-info">
+                <span class="card-title">方塊解謎</span>
+                <span class="card-tag">益智</span>
+            </div>
+        </a>
 
-    <script>
-        const workoutData = [
-            { day: "Day 1：胸部 + 腹部", list: [
-                ["上斜啞鈴推舉", "3組 10-12次"], ["平板臥推", "3組 8-10次"], ["繩索飛鳥", "3組 12-15次"], ["伏地挺身", "3組 力竭"], ["懸垂舉腿", "3組 15次", true]
-            ]},
-            { day: "Day 2：背部 + 腹部", list: [
-                ["坐姿下拉", "3組 10-12次"], ["器械划船", "3組 10-12次"], ["繩索直臂下壓", "3組 12-15次"], ["繩索面拉", "3組 15次"], ["捲腹 (Crunches)", "3組 20次", true]
-            ]},
-            { day: "Day 3：肩部 + 腹部", list: [
-                ["啞鈴肩推", "3組 8-10次"], ["啞鈴側平舉", "4組 15次"], ["繩索側平舉", "3組 15次"], ["啞鈴聳肩", "3組 12次"], ["俄羅斯轉體", "3組 每側15次", true]
-            ]},
-            { day: "Day 4：腿部 + 腹部", list: [
-                ["深蹲", "3組 8-10次"], ["腿舉 (Leg Press)", "3組 12次"], ["腿屈伸", "3組 15次"], ["腿彎舉", "3組 15次"], ["平板支撐 (Plank)", "3組 60秒", true]
-            ]},
-            { day: "Day 5：手臂 + 腹部", list: [
-                ["啞鈴彎舉", "3組 12次"], ["垂式彎舉", "3組 12次"], ["繩索下壓", "3組 12次"], ["仰臥臂屈伸", "3組 12次"], ["自行車捲腹", "3組 20次", true]
-            ]}
-        ];
+        <a href="game3-url" class="game-card">
+            <img src="https://picsum.photos/seed/game3/300/300" alt="遊戲 C" class="card-image">
+            <div class="card-info">
+                <span class="card-title">極速賽車</span>
+                <span class="card-tag">競速</span>
+            </div>
+        </a>
+    </main>
 
-        function render() {
-            let html = '';
-            workoutData.forEach((d, dIdx) => {
-                html += `<div class="day-section"><div class="day-title">${d.day}</div><div class="card">`;
-                d.list.forEach((ex, exIdx) => {
-                    const id = `item-${dIdx}-${exIdx}`;
-                    const checked = localStorage.getItem(id) === 'true' ? 'checked' : '';
-                    html += `
-                        <label class="item" for="${id}">
-                            <div class="content">
-                                <span class="name">${ex[0]}${ex[2] ? '<span class="abs-tag">腹肌</span>' : ''}</span>
-                                <span class="detail">${ex[1]}</span>
-                            </div>
-                            <input type="checkbox" id="${id}" ${checked} onchange="save('${id}', this.checked)">
-                            <div class="cb-container"></div>
-                        </label>`;
-                });
-                html += `</div></div>`;
-            });
-            document.getElementById('app').innerHTML = html;
-        }
-
-        function save(id, val) { localStorage.setItem(id, val); }
-
-        function reset() {
-            if(confirm('確定清除紀錄？')) {
-                localStorage.clear();
-                render();
-            }
-        }
-
-        render();
-    </script>
 </body>
 </html>
