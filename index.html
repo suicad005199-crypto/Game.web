@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>遊戲大廳</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://picsum.photos/192/192">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        :root { --ios-bg: #F2F2F7; --card-bg: #FFFFFF; --primary-text: #1C1C1E; --secondary-text: #8E8E93; --accent: #007AFF; }
+        :root { --ios-bg: #F2F2F7; --card-bg: #FFFFFF; --primary-text: #1C1C1E; --secondary-text: #8E8E93; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: calc(env(safe-area-inset-top) + 20px) 16px 40px; background: var(--ios-bg); font-family: -apple-system, system-ui, sans-serif; color: var(--primary-text); }
         h1 { font-size: 34px; font-weight: 700; margin: 0 0 24px 4px; }
         .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .game-card { background: var(--card-bg); border-radius: 20px; text-decoration: none; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .game-card { background: var(--card-bg); border-radius: 20px; text-decoration: none; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; }
         .game-card:active { transform: scale(0.95); filter: brightness(0.9); }
         .card-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #E5E5EA; }
         .card-info { padding: 12px; }
@@ -19,22 +24,23 @@
     </style>
 </head>
 <body>
-    <h1>遊戲大廳</h1>
+    <h1 id="brand-name">載入中...</h1>
     <main class="game-grid" id="game-container"></main>
 
     <script>
         const SUPABASE_URL = https://hanyrygfyalbcdmeodyv.supabase.co;
         const SUPABASE_KEY = sb_publishable_qI3Gfqt6tRG9whlmsl1oqA_ZaBndPN4;
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function loadGames() {
+        async function init() {
             const container = document.getElementById('game-container');
-            const { data: games, error } = await supabase
+            const { data: games, error } = await supabaseClient
                 .from('games')
                 .select('*')
                 .eq('is_published', true)
                 .order('sort_order', { ascending: true });
 
+            document.getElementById('brand-name').textContent = "遊戲大廳";
             if (error) return console.error(error);
 
             container.innerHTML = games.map(game => `
@@ -47,8 +53,7 @@
                 </a>
             `).join('');
         }
-        loadGames();
+        init();
     </script>
 </body>
 </html>
-
