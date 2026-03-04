@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全跳轉中</title>
+    <style>
+        body { font-family: -apple-system; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #F2F2F7; text-align: center; }
+        .box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 80%; }
+        .btn { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #007AFF; color: white; text-decoration: none; border-radius: 12px; font-weight: 600; }
+        .error { color: #FF3B30; }
+    </style>
+</head>
+<body>
+    <div class="box" id="content">
+        <p>正在驗證安全連結...</p>
+    </div>
+
+    <script>
+        async function handleRedirect() {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('game');
+            const content = document.getElementById('content');
+
+            // 1. 拒絕直接傳入 URL 的企圖 (SEC-ALLOWLIST-01)
+            if (params.has('url') || params.has('target')) {
+                showError("錯誤：不允許直接跳轉外部網址。");
+                return;
+            }
+
+            try {
+                const res = await fetch('./data/games.json');
+                const data = await res.json();
+                const game = data.games.find(g => g.slug === slug);
+
+                // 2. 白名單查表 (SEC-ALLOWLIST-01)
+                if (!game || !game.is_published) {
+                    showError("找不到此遊戲入口或已下架。");
+                    return;
+                }
+
+                // 3. 安全提示與網域顯示 (SEC-UI-01)
+                const targetDomain = new URL(game.target_url).hostname;
+                content.innerHTML = `
+                    <h3>即將前往 ${game.title}</h3>
+                    <p style="color: #8E8E93;">目標網域：${targetDomain}</p>
+                    <p>請確認您正在官方環境中進行遊戲</p>
+                    <a href="${game.target_url}" rel="noopener noreferrer" class="btn">立即進入</a>
+                `;
+                
+                // 可選：自動跳轉 logic
+                // setTimeout(() => window.location.href = game.target_url, 1500);
+
+            } catch (e) {
+                showError("系統錯誤，請稍後再試。");
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('content').innerHTML = `<h3 class="error">${msg}</h3><a href="index.html" style="color: #8E8E93;">返回大廳</a>`;
+        }
+
+        handleRedirect();
+    </script>
+</body>
+</html>
