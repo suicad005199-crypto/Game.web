@@ -1,64 +1,53 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="format-detection" content="telephone=no">
-<meta name="description" content="星雲遊戲館 - 最安全的遊戲入口">
-<title>遊戲大廳</title>
-<style>
-:root {
-    --ios-bg:#F2F2F7;--card-bg:#fff;--primary-text:#1C1C1E;--secondary-text:#8E8E93;--accent:#007AFF;
-    --safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom);
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{margin:0;padding:calc(var(--safe-top)+20px)16px calc(var(--safe-bottom)+30px);background-color:var(--ios-bg);
-font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;color:var(--primary-text);line-height:1.4;}
-header{margin-bottom:24px;padding-left:4px;}
-h1{font-size:34px;font-weight:700;letter-spacing:-0.5px;margin:0;}
-.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.game-card{background:var(--card-bg);border-radius:20px;text-decoration:none;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);transition:transform 0.2s cubic-bezier(0.33,1,0.68,1);}
-.game-card:active{transform:scale(0.94);filter:brightness(0.9);}
-.card-image{width:100%;aspect-ratio:1/1;object-fit:cover;background-color:#E5E5EA;}
-.card-info{padding:12px;}
-.card-title{display:block;font-size:16px;font-weight:600;color:var(--primary-text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.card-tag{font-size:12px;color:var(--secondary-text);font-weight:400;background:#F2F2F7;padding:2px 8px;border-radius:6px;display:inline-block;}
-@keyframes skeleton-loading{0%{background-color:#E5E5EA;}50%{background-color:#D1D1D6;}100%{background-color:#E5E5EA;}}
-.loading .card-image{animation:skeleton-loading 1.5s infinite;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>遊戲大廳</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --ios-bg: #F2F2F7; --card-bg: #FFFFFF; --primary-text: #1C1C1E; --secondary-text: #8E8E93; --accent: #007AFF; }
+        body { margin: 0; padding: calc(env(safe-area-inset-top) + 20px) 16px 40px; background: var(--ios-bg); font-family: -apple-system, system-ui, sans-serif; color: var(--primary-text); }
+        h1 { font-size: 34px; font-weight: 700; margin: 0 0 24px 4px; }
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .game-card { background: var(--card-bg); border-radius: 20px; text-decoration: none; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .game-card:active { transform: scale(0.95); filter: brightness(0.9); }
+        .card-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #E5E5EA; }
+        .card-info { padding: 12px; }
+        .card-title { display: block; font-size: 16px; font-weight: 600; color: var(--primary-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-tag { font-size: 12px; color: var(--secondary-text); background: #F2F2F7; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
+    </style>
 </head>
 <body>
-<header><h1 id="brand-name">遊戲大廳</h1></header>
-<main class="game-grid" id="game-container">
-    <div class="game-card loading"><div class="card-image"></div></div>
-    <div class="game-card loading"><div class="card-image"></div></div>
-</main>
-<script>
-async function initLobby() {
-    try {
-        const res = await fetch('./games.json');
-        const data = await res.json();
-        document.getElementById('brand-name').textContent = data.meta.brand_name;
-        const container = document.getElementById('game-container');
+    <h1>遊戲大廳</h1>
+    <main class="game-grid" id="game-container"></main>
 
-        const html = data.games
-            .filter(g => g.is_published)
-            .sort((a,b)=>a.sort_order-b.sort_order)
-            .map(game => `
+    <script>
+        const SUPABASE_URL = '你的_SUPABASE_URL';
+        const SUPABASE_KEY = '你的_SUPABASE_ANON_KEY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function loadGames() {
+            const container = document.getElementById('game-container');
+            const { data: games, error } = await supabase
+                .from('games')
+                .select('*')
+                .eq('is_published', true)
+                .order('sort_order', { ascending: true });
+
+            if (error) return console.error(error);
+
+            container.innerHTML = games.map(game => `
                 <a href="go.html?game=${game.slug}" class="game-card">
-                    <img src="${game.cover_image_url}" alt="${game.title} 遊戲封面" class="card-image" loading="lazy">
+                    <img src="${game.cover_image_url}" alt="${game.title}" class="card-image" loading="lazy">
                     <div class="card-info">
                         <span class="card-title">${game.title}</span>
-                        <span class="card-tag">${game.tags[0]||'遊戲'}</span>
+                        <span class="card-tag">${game.tags?.[0] || '遊戲'}</span>
                     </div>
                 </a>
             `).join('');
-        container.innerHTML = html;
-    } catch (e) {
-        console.error("載入失敗:",e);
-    }
-}
-initLobby();
-</script>
+        }
+        loadGames();
+    </script>
 </body>
 </html>
