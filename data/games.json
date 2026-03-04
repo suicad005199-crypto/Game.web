@@ -1,7 +1,6 @@
 {
   "meta": {
     "brand_name": "星雲娛樂城",
-    "official_domain": "games.yourdomain.com",
     "updated_at": "2026-03-04T15:00:00Z"
   },
   "games": [
@@ -10,7 +9,7 @@
       "slug": "star-war",
       "title": "星際遠征",
       "cover_image_url": "https://picsum.photos/seed/g1/400/300",
-      "tags": ["冒險", "科幻"],
+      "tags": ["冒險"],
       "is_published": true,
       "sort_order": 1
     },
