@@ -1,35 +1,36 @@
-document.addEventListener("DOMContentLoaded", () => {
-    fetchGames();
+document.addEventListener('DOMContentLoaded', async () => {
+  const grid = document.getElementById('game-grid');
+
+  try {
+    const res = await fetch('/api/games');
+    const games = await res.json();
+    
+    grid.innerHTML = games.map(game => `
+      <div class="card" onclick="playGame('${game.slug}')">
+        <img src="${game.cover_image_url}" alt="${game.title}" loading="lazy">
+        <div class="card-info">
+          <h3 class="card-title">${game.title}</h3>
+          <p class="card-desc">${game.description || ''}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    grid.innerHTML = '<div class="loading">載入失敗，請重新整理。</div>';
+  }
 });
 
-async function fetchGames(category = '', sort = 'default') {
-    const container = document.getElementById('game-container');
+// 處理點擊與開新分頁
+async function playGame(slug) {
+  try {
+    const res = await fetch(`/api/go?slug=${slug}`);
+    const data = await res.json();
     
-    try {
-        let url = `/api/games?limit=20`;
-        if (category) url += `&category=${category}`;
-        if (sort !== 'default') url += `&sort=${sort}`;
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('API request failed');
-        
-        const games = await response.json();
-        renderGames(games);
-    } catch (error) {
-        console.error("Error fetching games:", error);
-        container.innerHTML = `<p style="text-align:center; grid-column:1/-1; color:#AAA;">無法載入遊戲列表，請稍後再試。</p>`;
+    if (data.url) {
+      window.open(data.url, '_blank'); // 核心解法：強制在當前瀏覽器開新分頁
+    } else {
+      alert('無法取得遊戲連結');
     }
-}
-
-function renderGames(games) {
-    const container = document.getElementById('game-container');
-    container.innerHTML = games.map(game => `
-        <a href="/api/go?slug=${game.slug}" class="game-card">
-            <img src="${game.cover_image_url || 'images/default.jpg'}" class="card-image" loading="lazy" alt="${game.title}">
-            <div class="card-info">
-                <span class="card-title">${game.title}</span>
-                <span class="card-desc">${game.description || ''}</span>
-            </div>
-        </a>
-    `).join('');
+  } catch (err) {
+    alert('連線錯誤，請重試');
+  }
 }
