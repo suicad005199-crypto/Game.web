@@ -1,6 +1,6 @@
 {
-  "name": "遊戲大廳",
-  "short_name": "大廳",
+  "name": "星雲遊戲大廳",
+  "short_name": "遊戲館",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#F2F2F7",
