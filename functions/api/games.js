@@ -1,62 +1,52 @@
-export async function onRequest(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
+export async function onRequestGet(context) {
+  const { env } = context;
 
-  // 1. 檢查快取 (TTL 120s)
-  const cache = caches.default;
-  let response = await cache.match(request);
-  if (response) {
-    return response;
+  // 1. 取得環境變數 (必須與 Cloudflare Settings 一致)
+  const supabaseUrl = env.SUPABASE_URL;
+  const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // 2. 檢查變數是否存在 (預防 500 錯誤)
+  if (!supabaseUrl || !supabaseKey) {
+    return new Response(
+      JSON.stringify({ error: "Missing environment variables." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 
-  // 2. 解析參數
-  const category = url.searchParams.get('category');
-  const sort = url.searchParams.get('sort');
-  const page = parseInt(url.searchParams.get('page')) || 1;
-  const limit = Math.min(parseInt(url.searchParams.get('limit')) || 12, 50);
-  const offset = (page - 1) * limit;
+  try {
+    // 3. 呼叫 Supabase REST API (查詢 games 資料表)
+    // 這裡使用 select=* 並依 sort_order 排序
+    const response = await fetch(`${supabaseUrl}/rest/v1/games?select=*&order=sort_order.asc`, {
+      method: "GET",
+      headers: {
+        "apikey": supabaseKey,
+        "Authorization": `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json"
+      }
+    });
 
-  // 3. 組合 Supabase 查詢
-  let apiUrl = new URL(`${env.SUPABASE_URL}/rest/v1/games`);
-  apiUrl.searchParams.append('is_published', 'eq.true');
-  apiUrl.searchParams.append('select', 'slug,title,description,cover_image_url,tags');
-  apiUrl.searchParams.append('limit', limit.toString());
-  apiUrl.searchParams.append('offset', offset.toString());
-
-  if (category) {
-    apiUrl.searchParams.append('category', `eq.${category}`);
-  }
-
-  if (sort === 'popular') {
-    apiUrl.searchParams.append('order', 'click_count.desc');
-  } else if (sort === 'latest') {
-    apiUrl.searchParams.append('order', 'created_at.desc');
-  } else {
-    apiUrl.searchParams.append('order', 'sort_order.asc');
-  }
-
-  // 4. 呼叫資料庫 (使用 Service Role Key)
-  const dbRes = await fetch(apiUrl.toString(), {
-    headers: {
-      'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-      'Authorization': `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`
+    if (!response.ok) {
+      const errorData = await response.text();
+      return new Response(
+        JSON.stringify({ error: "Database error", details: errorData }),
+        { status: response.status, headers: { "Content-Type": "application/json" } }
+      );
     }
-  });
 
-  if (!dbRes.ok) {
-    return new Response(JSON.stringify({ error: 'Database error' }), { status: 500 });
+    const data = await response.json();
+
+    // 4. 回傳資料給前端
+    return new Response(JSON.stringify(data), {
+      headers: { 
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*" 
+      }
+    });
+
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: "Server crash", message: err.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
-
-  const data = await dbRes.json();
-
-  // 5. 建立回應並寫入快取
-  response = new Response(JSON.stringify(data), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=120'
-    }
-  });
-
-  context.waitUntil(cache.put(request, response.clone()));
-  return response;
 }
