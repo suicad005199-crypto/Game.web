@@ -1,55 +1,56 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>星雲遊戲館</title>
-    <link rel="manifest" href="manifest.json">
-    <style>
-        :root { --gold: #D4AF37; --dark-bg: #0A0A0A; --card-bg: #1A1A1A; --text-gold: #FFD700; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--dark-bg); font-family: sans-serif; color: #FFF; overflow-x: hidden; }
-
-        header { 
-            position: sticky; top: 0; background: rgba(10, 10, 10, 0.8); 
-            backdrop-filter: blur(15px); padding: 12px 20px; 
-            display: flex; align-items: center; justify-content: space-between; z-index: 100; 
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-        }
-        header h1 { margin: 0; font-size: 18px; color: var(--text-gold); }
-        .login-btn { 
-            background: linear-gradient(135deg, #D4AF37, #F2D06B); color: #000;
-            border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; cursor: pointer;
-        }
-
-        .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .game-card { 
-            background: var(--card-bg); border-radius: 20px; overflow: hidden; 
-            border: 1px solid rgba(212, 175, 55, 0.2); text-decoration: none; color: inherit;
-            display: flex; flex-direction: column; transition: transform 0.2s;
-        }
-        .game-card:active { transform: scale(0.96); border-color: var(--gold); }
-        .card-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; filter: brightness(0.85); }
-        .card-info { padding: 8px 10px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .card-title { color: var(--text-gold); font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-desc { font-size: 10px; color: #AAA; height: 28px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-
-        /* Skeleton Loading */
-        .skeleton { animation: pulse 1.5s infinite; background: linear-gradient(90deg, #222 25%, #333 50%, #222 75%); background-size: 200% 100%; }
-        .skel-img { width: 100%; aspect-ratio: 1/1; }
-        .skel-text { height: 14px; margin: 4px auto; width: 80%; border-radius: 4px; }
-        @keyframes pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>星雲遊戲館</title>
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    :root { 
+      --gold: #FFD700; 
+      --bg: #0d0d0d; 
+      --card-bg: #1a1a1a; 
+      --text: #ffffff; 
+      --sub-text: #888888; 
+    }
+    body { 
+      margin: 0; background: var(--bg); color: var(--text); 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    header { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 16px 20px; border-bottom: 1px solid #333; 
+    }
+    header h1 { margin: 0; color: var(--gold); font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+    .login-btn { 
+      background: var(--gold); color: #000; border: none; 
+      padding: 8px 18px; border-radius: 20px; font-weight: bold; font-size: 14px;
+    }
+    .container { padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .card { 
+      background: var(--card-bg); border-radius: 16px; overflow: hidden; 
+      border: 1px solid #2a2a2a; transition: transform 0.15s ease; cursor: pointer;
+    }
+    .card:active { transform: scale(0.96); }
+    .card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; border-bottom: 1px solid #2a2a2a; }
+    .card-info { padding: 12px; text-align: center; }
+    .card-title { color: var(--gold); font-size: 15px; font-weight: bold; margin: 0 0 6px 0; }
+    .card-desc { color: var(--sub-text); font-size: 11px; margin: 0; }
+    .loading { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--gold); }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>星雲遊戲館</h1>
-        <button id="login-btn" class="login-btn">登入</button>
-    </header>
-    <main class="game-grid" id="game-container">
-        <div class="game-card"><div class="skeleton skel-img"></div><div class="card-info"><div class="skeleton skel-text"></div><div class="skeleton skel-text" style="width:60%"></div></div></div>
-        <div class="game-card"><div class="skeleton skel-img"></div><div class="card-info"><div class="skeleton skel-text"></div><div class="skeleton skel-text" style="width:60%"></div></div></div>
-    </main>
-    <script type="module" src="js/api.js"></script>
+  <header>
+    <h1>星雲遊戲館</h1>
+    <button class="login-btn">登入</button>
+  </header>
+  <div class="container">
+    <div id="game-grid" class="grid">
+      <div class="loading">遊戲載入中...</div>
+    </div>
+  </div>
+  <script src="/js/api.js"></script>
 </body>
 </html>
