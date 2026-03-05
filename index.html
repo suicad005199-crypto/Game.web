@@ -104,28 +104,28 @@
         /* 確保卡片大小一致的核心樣式 */
         .card-image { 
             width: 100%; 
-            aspect-ratio: 4/3; /* 統一圖片比例為 4:3 */
+            aspect-ratio: 1/1; /* 統一圖片比例為 4:3 */
             object-fit: cover; /* 確保圖片裁剪且不變形 */
             background: #222; /* 為預載入和失效圖片提供背景 */
             filter: brightness(0.85); /* 統一圖片亮度，增強黑金感 */
         }
         .card-info { 
-            padding: 14px; 
+            padding: 8px; 
             text-align: center; 
             flex: 1; /* 讓資訊區塊佔滿其餘高度 */
             display: flex; flex-direction: column; justify-content: center; /* 垂直居中內容 */
         }
         .card-title { 
-            color: var(--text-gold); font-weight: 700; font-size: 15px; 
-            margin: 0 0 4px; display: block;
+            color: var(--text-gold); font-weight: 700; font-size: 14px; 
+            margin: 0 0 2px; display: block;
             /* 確保標題只有一行 */
-            height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .card-desc { 
-            font-size: 11px; color: var(--text-sub); 
+            font-size: 10px; color: var(--text-sub); 
             line-height: 1.4;
             /* 確保描述只有兩行 */
-            height: 34px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            height: 28px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         }
     </style>
 </head>
@@ -207,4 +207,5 @@
     </script>
 </body>
 </html>
+
 
