@@ -3,34 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全檢查</title>
+    <title>安全檢查中</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { display: flex; align-items: center; justify-content: center; height: 100vh; background: #F2F2F7; font-family: sans-serif; text-align: center; }
-        .btn { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #007AFF; color: #FFF; text-decoration: none; border-radius: 10px; font-weight: 600; }
+        body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #F2F2F7; font-family: -apple-system, sans-serif; }
+        .box { background: white; padding: 40px; border-radius: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 80%; max-width: 350px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #007AFF; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn { display: block; margin-top: 30px; padding: 15px; background: #007AFF; color: white; text-decoration: none; border-radius: 15px; font-weight: 600; }
     </style>
 </head>
 <body>
-    <div id="app">正在驗證...</div>
+    <div class="box" id="content">
+        <div class="loader"></div>
+        <p>正在加密連結...</p>
+    </div>
     <script>
-        const SUPABASE_URL = 'https://hanyrygfyalbcdmeodyv.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_qI3Gfqt6tRG9whlmsl1oqA_ZaBndPN4';
+        const SUPABASE_URL = '你的_URL';
+        const SUPABASE_KEY = '你的_KEY';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function verify() {
+        async function go() {
             const slug = new URLSearchParams(location.search).get('game');
             const { data: game } = await supabaseClient.from('games').select('*').eq('slug', slug).single();
-
             if (game && game.is_published) {
-                document.getElementById('app').innerHTML = `
-                    <h3>即將前往 ${game.title}</h3>
-                    <a href="${game.target_url}" class="btn">確認進入</a>
+                document.getElementById('content').innerHTML = `
+                    <h2 style="margin:0">${game.title}</h2>
+                    <p style="color:#8E8E93">安全連結已就緒</p>
+                    <a href="${game.target_url}" class="btn">立即進入遊戲</a>
                 `;
             } else {
-                document.getElementById('app').innerHTML = `<h3>連結無效</h3><a href="index.html">返回</a>`;
+                location.href = 'index.html';
             }
         }
-        verify();
+        go();
     </script>
 </body>
 </html>
