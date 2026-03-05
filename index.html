@@ -3,209 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>星雲遊戲館</title>
     <link rel="manifest" href="manifest.json">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        /* 整體色調與主題配置 - 博弈、財富 */
-        :root { 
-            --gold: #D4AF37; /* 金屬金 */
-            --dark-bg: #0A0A0A; /* 深黑背景 */
-            --card-bg: #1A1A1A; /* 卡片深色背景 */
-            --text-gold: #FFD700; /* 強調金 */
-            --text-main: #FFF; /* 主要文字白 */
-            --text-sub: #AAA; /* 次要文字銀 */
-            --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #F2D06B 100%); /* 金屬漸層 */
-        }
+        :root { --gold: #D4AF37; --dark-bg: #0A0A0A; --card-bg: #1A1A1A; --text-gold: #FFD700; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            margin: 0; 
-            background: var(--dark-bg); 
-            font-family: -apple-system, system-ui, sans-serif; 
-            color: var(--text-main); 
-            overflow-x: hidden; 
-        }
+        body { margin: 0; background: var(--dark-bg); font-family: sans-serif; color: #FFF; overflow-x: hidden; }
 
-        /* Header (黑金 + 毛玻璃 + 登入鈕預留) */
         header { 
-            position: sticky; top: 0; 
-            background: rgba(10, 10, 10, 0.75); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 12px 20px; 
-            display: flex; align-items: center; justify-content: space-between;
-            z-index: 100; 
+            position: sticky; top: 0; background: rgba(10, 10, 10, 0.8); 
+            backdrop-filter: blur(15px); padding: 12px 20px; 
+            display: flex; align-items: center; justify-content: space-between; z-index: 100; 
             border-bottom: 1px solid rgba(212, 175, 55, 0.3);
         }
-        .header-left { display: flex; align-items: center; }
-        .menu-btn { 
-            border: none; background: none; color: var(--gold); 
-            cursor: pointer; padding: 5px; margin-right: 12px; display: flex; align-items: center;
-        }
-        header h1 { 
-            margin: 0; font-size: 18px; font-weight: 800; color: var(--text-gold); 
-            letter-spacing: 1px; 
-        }
-        
-        /* 標題右側的「登入」Button (預留接口) */
+        header h1 { margin: 0; font-size: 18px; color: var(--text-gold); }
         .login-btn { 
-            background: var(--gradient-gold); color: #000;
-            border: none; padding: 6px 16px; border-radius: 20px; 
-            font-weight: 700; font-size: 13px;
-            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4); 
-            cursor: pointer;
-            transition: transform 0.2s;
+            background: linear-gradient(135deg, #D4AF37, #F2D06B); color: #000;
+            border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; cursor: pointer;
         }
-        .login-btn:active { transform: scale(0.95); }
 
-        /* Sidebar (黑金樣式) */
-        #sidebar { 
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
-            background: #111; z-index: 200; 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 60px 20px;
-            border-right: 1px solid rgba(212, 175, 55, 0.5);
-            box-shadow: 15px 0 30px rgba(0,0,0,0.3);
-        }
-        #sidebar.open { transform: translateX(280px); }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; }
-        .overlay.show { display: block; }
-        
-        /* 分類 SVG 圖標與樣式 */
-        .menu-item { 
-            display: flex; align-items: center; padding: 16px; 
-            color: var(--gold); font-size: 16px; border-radius: 12px; 
-            cursor: pointer; transition: 0.2s;
-        }
-        .menu-item:active { background: rgba(212, 175, 55, 0.1); }
-        .menu-item svg { width: 20px; height: 20px; margin-right: 12px; color: var(--gold); }
-
-        /* Game Grid & Cards (高度一致性與樣式優化) */
-        .game-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* 2欄，確保寬度一致 */
-            gap: 15px; 
-            padding: 20px; 
-        }
+        .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
         .game-card { 
-            background: var(--card-bg); 
-            border-radius: 20px; /* 統一圓角 */
-            overflow: hidden; 
-            border: 1px solid rgba(212, 175, 55, 0.2); 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            transition: transform 0.2s, border-color 0.2s; 
-            text-decoration: none; color: inherit;
-            display: flex; flex-direction: column; /* 啟用 flex 佈局 */
+            background: var(--card-bg); border-radius: 20px; overflow: hidden; 
+            border: 1px solid rgba(212, 175, 55, 0.2); text-decoration: none; color: inherit;
+            display: flex; flex-direction: column; transition: transform 0.2s;
         }
         .game-card:active { transform: scale(0.96); border-color: var(--gold); }
-        
-        /* 確保卡片大小一致的核心樣式 */
-        .card-image { 
-            width: 100%; 
-            aspect-ratio: 1/1; /* 統一圖片比例為 4:3 */
-            object-fit: cover; /* 確保圖片裁剪且不變形 */
-            background: #222; /* 為預載入和失效圖片提供背景 */
-            filter: brightness(0.85); /* 統一圖片亮度，增強黑金感 */
-        }
-        .card-info { 
-            padding: 8px; 
-            text-align: center; 
-            flex: 1; /* 讓資訊區塊佔滿其餘高度 */
-            display: flex; flex-direction: column; justify-content: center; /* 垂直居中內容 */
-        }
-        .card-title { 
-            color: var(--text-gold); font-weight: 700; font-size: 14px; 
-            margin: 0 0 2px; display: block;
-            /* 確保標題只有一行 */
-            height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .card-desc { 
-            font-size: 10px; color: var(--text-sub); 
-            line-height: 1.4;
-            /* 確保描述只有兩行 */
-            height: 28px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-        }
+        .card-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; filter: brightness(0.85); }
+        .card-info { padding: 8px 10px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .card-title { color: var(--text-gold); font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-desc { font-size: 10px; color: #AAA; height: 28px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+        /* Skeleton Loading */
+        .skeleton { animation: pulse 1.5s infinite; background: linear-gradient(90deg, #222 25%, #333 50%, #222 75%); background-size: 200% 100%; }
+        .skel-img { width: 100%; aspect-ratio: 1/1; }
+        .skel-text { height: 14px; margin: 4px auto; width: 80%; border-radius: 4px; }
+        @keyframes pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body>
-    <div class="overlay" onclick="toggleMenu()"></div>
-    <nav id="sidebar">
-        <div class="menu-item" onclick="filterGames('全部')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg> 財富中心
-        </div>
-        <div class="menu-item" onclick="filterGames('熱門')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5zM11 12A2.5 2.5 0 0 0 8.5 14.5c0 1.153.433 2.294 1 3a2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5z"></path></svg> 熱門推薦
-        </div>
-        <div class="menu-item" onclick="filterGames('撲克')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.5 6.5L22 10l-5 5.5L18.5 22 12 18.5 5.5 22 7 15.5 2 10l6.5-1.5L12 2z"></path></svg> 撲克大賽
-        </div>
-    </nav>
-
     <header>
-        <div class="header-left">
-            <button class="menu-btn" onclick="toggleMenu()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            </button>
-            <h1>星雲遊戲館</h1>
-        </div>
-        <button id="login-btn" class="login-btn" onclick="alert('登入系統對接中...')">登入</button>
+        <h1>星雲遊戲館</h1>
+        <button id="login-btn" class="login-btn">登入</button>
     </header>
-
-    <main class="game-grid">
-        <a href="go.html?game=blackjack" class="game-card">
-            <img src="https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=500&q=80" alt="21點" class="card-image">
-            <div class="card-info">
-                <span class="card-title">尊爵 21 點</span>
-                <span class="card-desc">高額獎池，挑戰莊家極限</span>
-            </div>
-        </a>
-        
-        <a href="go.html?game=poker" class="game-card">
-            <img src="images/poker.jpg" alt="德州撲克" class="card-image">
-            <div class="card-info">
-                <span class="card-title">德州撲克</span>
-                <span class="card-desc">全球玩家對戰，贏取豐厚籌碼</span>
-            </div>
-        </a>
-        
-        <a href="go.html?game=tiles" class="game-card">
-            <img src="images/poker.jpg" alt="推筒子" class="card-image">
-            <div class="card-info">
-                <span class="card-title">急速推筒子</span>
-                <span class="card-desc">傳統藝術與財富的交響樂</span>
-            </div>
-        </a>
-        
-        <a href="go.html?game=baccarat" class="game-card">
-            <img src="images/poker.jpg" alt="百家樂" class="card-image">
-            <div class="card-info">
-                <span class="card-title">皇城百家樂</span>
-                <span class="card-desc">經典奢華，開創財富傳奇</span>
-            </div>
-        </a>
+    <main class="game-grid" id="game-container">
+        <div class="game-card"><div class="skeleton skel-img"></div><div class="card-info"><div class="skeleton skel-text"></div><div class="skeleton skel-text" style="width:60%"></div></div></div>
+        <div class="game-card"><div class="skeleton skel-img"></div><div class="card-info"><div class="skeleton skel-text"></div><div class="skeleton skel-text" style="width:60%"></div></div></div>
     </main>
-
-    <script>
-        // Supabase 的預留 URL 與 KEY (為後續功能預留)
-        const SUPABASE_URL = 'https://hanyrygfyalbcdmeodyv.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_qI3Gfqt6tRG9whlmsl1oqA_ZaBndPN4';
-
-        // 漢堡選單切換邏輯
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.querySelector('.overlay').classList.toggle('show');
-        }
-
-        // 分類篩選邏輯 (預留功能)
-        function filterGames(tag) {
-            toggleMenu();
-            // 在此 HTML 版本中，我們先顯示全部遊戲
-            alert('分類：' + tag + ' 功能對接中...');
-        }
-    </script>
+    <script type="module" src="js/api.js"></script>
 </body>
 </html>
-
-
