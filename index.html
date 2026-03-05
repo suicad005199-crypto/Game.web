@@ -5,83 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>星雲遊戲大廳</title>
+    <title>星雲遊戲館</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; --sub: #8E8E93; }
+        :root { --gold: #D4AF37; --dark-bg: #0A0A0A; --card-bg: #1A1A1A; --text-gold: #FFD700; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); font-family: -apple-system, system-ui, sans-serif; color: var(--text); overflow-x: hidden; }
+        body { margin: 0; background: var(--dark-bg); font-family: -apple-system, sans-serif; color: #FFF; }
 
-        /* Header with Glassmorphism */
+        /* Header */
         header { 
-            position: sticky; top: 0; background: rgba(255,255,255,0.7); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 15px 20px; display: flex; align-items: center; z-index: 100; 
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            position: sticky; top: 0; background: rgba(10,10,10,0.8); 
+            backdrop-filter: blur(15px); padding: 12px 20px; 
+            display: flex; align-items: center; justify-content: space-between;
+            z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.3);
         }
-        .menu-btn { border: none; background: none; padding: 5px; cursor: pointer; margin-right: 15px; display: flex; align-items: center; }
-        header h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+        .header-left { display: flex; align-items: center; }
+        .menu-btn { border: none; background: none; color: var(--gold); cursor: pointer; padding: 5px; margin-right: 12px; }
+        header h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text-gold); letter-spacing: 1px; }
+        
+        /* Login Button */
+        .login-btn { 
+            background: linear-gradient(135deg, #D4AF37, #F2D06B); color: #000;
+            border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 13px;
+            box-shadow: 0 0 10px rgba(212,175,55,0.4); cursor: pointer;
+        }
 
-        /* Sidebar UI */
+        /* Sidebar */
         #sidebar { 
             position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
-            background: var(--card); z-index: 200; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 60px 20px; box-shadow: 15px 0 30px rgba(0,0,0,0.05); 
+            background: #111; z-index: 200; transition: 0.3s; padding: 60px 20px;
+            border-right: 1px solid var(--gold);
         }
-        #sidebar.open { transform: translateX(280px); }
-        .overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.2); z-index: 150; opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .overlay.show { opacity: 1; pointer-events: auto; }
-        
-        /* Menu Items with SVG Icons */
-        .menu-item { 
-            display: flex; align-items: center; padding: 16px; font-size: 17px; 
-            font-weight: 500; border-radius: 12px; margin-bottom: 8px; transition: 0.2s;
-        }
-        .menu-item:active { background: #F2F2F7; transform: scale(0.98); }
-        .menu-item svg { width: 22px; height: 22px; margin-right: 15px; color: var(--primary); }
+        #sidebar.open { left: 0; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 150; display: none; }
+        .overlay.show { display: block; }
+        .menu-item { display: flex; align-items: center; padding: 15px; color: var(--gold); font-size: 16px; cursor: pointer; }
+        .menu-item svg { width: 20px; margin-right: 12px; }
 
         /* Grid & Cards */
-        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px; }
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
         .game-card { 
-            background: var(--card); border-radius: 24px; text-decoration: none; 
-            overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.04); color: inherit;
-            transition: 0.2s; display: flex; flex-direction: column;
+            background: var(--card-bg); border-radius: 15px; overflow: hidden; 
+            border: 1px solid rgba(212,175,55,0.2); transition: 0.2s; text-decoration: none; color: inherit;
         }
-        .game-card:active { transform: scale(0.95); opacity: 0.9; }
-        .card-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #E5E5EA; }
-        .card-info { padding: 14px; }
-        .card-title { font-weight: 700; font-size: 17px; display: block; margin-bottom: 4px; }
-        .card-desc { font-size: 12px; color: var(--sub); line-height: 1.4; height: 34px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .game-card:active { transform: scale(0.96); border-color: var(--gold); }
+        .card-image { width: 100%; aspect-ratio: 4/3; object-fit: cover; filter: brightness(0.8); }
+        .card-info { padding: 12px; text-align: center; }
+        .card-title { color: var(--text-gold); font-weight: 700; font-size: 15px; margin-bottom: 4px; display: block; }
+        .card-desc { font-size: 11px; color: #AAA; }
     </style>
 </head>
 <body>
-
     <div class="overlay" onclick="toggleMenu()"></div>
     <nav id="sidebar">
-        <div class="menu-item" onclick="filterGames('全部')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg> 全部遊戲
-        </div>
-        <div class="menu-item" onclick="filterGames('熱門')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg> 熱門推薦
-        </div>
-        <div class="menu-item" onclick="filterGames('撲克')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.5 6.5L22 10l-5 5.5L18.5 22 12 18.5 5.5 22 7 15.5 2 10l6.5-1.5L12 2z"></path></svg> 撲克系列
-        </div>
-        <div class="menu-item" onclick="filterGames('麻將')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg> 傳統博弈
-        </div>
+        <div class="menu-item" onclick="filterGames('全部')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg> 財富中心</div>
+        <div class="menu-item" onclick="filterGames('熱門')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg> 熱門推薦</div>
+        <div class="menu-item" onclick="filterGames('撲克')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.5 6.5L22 10l-5 5.5L18.5 22 12 18.5 5.5 22 7 15.5 2 10l6.5-1.5L12 2z"></path></svg> 撲克大賽</div>
     </nav>
 
     <header>
-        <button class="menu-btn" onclick="toggleMenu()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <h1>星雲遊戲館</h1>
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleMenu()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+            <h1>星雲遊戲館</h1>
+        </div>
+        <button class="login-btn" onclick="alert('登入系統對接中...')">登入</button>
     </header>
 
     <main class="game-grid" id="game-container"></main>
@@ -99,17 +87,13 @@
 
         async function fetchGames() {
             const { data, error } = await supabaseClient.from('games').select('*').eq('is_published', true).order('sort_order');
-            if (!error) {
-                allGames = data;
-                renderGames(allGames);
-            }
+            if (!error) { allGames = data; renderGames(allGames); }
         }
 
         function renderGames(list) {
-            const container = document.getElementById('game-container');
-            container.innerHTML = list.map(game => `
+            document.getElementById('game-container').innerHTML = list.map(game => `
                 <a href="go.html?game=${game.slug}" class="game-card">
-                    <img src="${game.cover_image_url}" class="card-image" loading="lazy">
+                    <img src="${game.cover_image_url}" class="card-image">
                     <div class="card-info">
                         <span class="card-title">${game.title}</span>
                         <span class="card-desc">${game.description}</span>
@@ -120,16 +104,9 @@
 
         function filterGames(tag) {
             toggleMenu();
-            if (tag === '全部') {
-                renderGames(allGames);
-            } else {
-                const filtered = allGames.filter(g => g.tags && g.tags.includes(tag));
-                renderGames(filtered);
-            }
+            renderGames(tag === '全部' ? allGames : allGames.filter(g => g.tags?.includes(tag)));
         }
-
         fetchGames();
     </script>
 </body>
 </html>
-
