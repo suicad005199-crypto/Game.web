@@ -1,12 +1,18 @@
-async function initUser() {
+async function initSession() {
     let user = JSON.parse(localStorage.getItem('nebula_user'));
     if (!user) {
         const res = await fetch('/api/auth/guest');
         user = await res.json();
         localStorage.setItem('nebula_user', JSON.stringify(user));
     }
-    document.getElementById('user-info').innerHTML = user.is_guest 
-        ? `<button onclick="alert('導向 Google 綁定...')">Gmail 綁定</button>`
+    const zone = document.getElementById('auth-zone');
+    zone.innerHTML = user.is_guest 
+        ? `<button onclick="bindGmail()">綁定 Gmail</button>` 
         : `<span>${user.display_name}</span>`;
 }
-document.addEventListener('DOMContentLoaded', initUser);
+
+function bindGmail() {
+    alert("正在前往 Google 帳號綁定...");
+    // window.location.href = google_oauth_url;
+}
+document.addEventListener('DOMContentLoaded', initSession);
