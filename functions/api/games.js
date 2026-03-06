@@ -1,52 +1,36 @@
 export async function onRequestGet(context) {
-  const { env } = context;
+  const { env, request } = context;
+  const url = new URL(request.url);
+  
+  // 參數解析
+  const category = url.searchParams.get('category');
+  const sort = url.searchParams.get('sort') || 'default';
+  const page = parseInt(url.searchParams.get('page')) || 1;
+  const limit = parseInt(url.searchParams.get('limit')) || 12;
+  const offset = (page - 1) * limit;
 
-  // 1. 取得環境變數 (必須與 Cloudflare Settings 一致)
-  const supabaseUrl = env.SUPABASE_URL;
-  const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  let queryUrl = `${env.SUPABASE_URL}/rest/v1/games?is_published=eq.true&select=*`;
+  if (category) queryUrl += `&category=eq.${category}`;
 
-  // 2. 檢查變數是否存在 (預防 500 錯誤)
-  if (!supabaseUrl || !supabaseKey) {
-    return new Response(
-      JSON.stringify({ error: "Missing environment variables." }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  // 排序處理
+  if (sort === 'popular') queryUrl += `&order=click_count.desc`;
+  else if (sort === 'latest') queryUrl += `&order=created_at.desc`;
+  else queryUrl += `&order=sort_order.asc`;
 
-  try {
-    // 3. 呼叫 Supabase REST API (查詢 games 資料表)
-    // 這裡使用 select=* 並依 sort_order 排序
-    const response = await fetch(`${supabaseUrl}/rest/v1/games?select=*&order=sort_order.asc`, {
-      method: "GET",
-      headers: {
-        "apikey": supabaseKey,
-        "Authorization": `Bearer ${supabaseKey}`,
-        "Content-Type": "application/json"
-      }
-    });
+  queryUrl += `&offset=${offset}&limit=${limit}`;
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      return new Response(
-        JSON.stringify({ error: "Database error", details: errorData }),
-        { status: response.status, headers: { "Content-Type": "application/json" } }
-      );
+  const res = await fetch(queryUrl, {
+    headers: {
+      "apikey": env.SUPABASE_SERVICE_ROLE_KEY,
+      "Authorization": `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`
     }
+  });
+  const data = await res.json();
 
-    const data = await response.json();
-
-    // 4. 回傳資料給前端
-    return new Response(JSON.stringify(data), {
-      headers: { 
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*" 
-      }
-    });
-
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: "Server crash", message: err.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  return new Response(JSON.stringify(data), {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, s-maxage=120" // Edge Cache 120s
+    }
+  });
 }
