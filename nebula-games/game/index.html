@@ -3,36 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>星雲娛樂城</title>
-    <link rel="manifest" href="/game/manifest.json">
-    <style>
-        :root { --gold: #FFD700; --bg: #0d0d0d; --card: #1a1a1a; }
-        body { margin: 0; background: var(--bg); color: #fff; font-family: sans-serif; }
-        header { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #333; }
-        .nav-btn, .login-btn { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 15px; cursor: pointer; }
-        .cat-bar { display: flex; gap: 10px; padding: 10px 15px; overflow-x: auto; }
-        .cat-bar button { background: #222; border: none; color: #aaa; padding: 8px 15px; border-radius: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
-        .card { background: var(--card); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid #333; cursor: pointer; }
-    </style>
+    <title>星雲娛樂城 - 頂級遊戲體驗</title>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <header>
-        <div style="color: var(--gold); font-weight: bold;">星雲娛樂城</div>
-        <div>
-            <button class="nav-btn" onclick="location.href='/game/looty-me.html'">個人</button>
-            <button class="login-btn" id="login-btn" onclick="Auth.login()">登入</button>
+        <div class="logo">星雲娛樂城</div>
+        <nav id="category-bar">
+            <button onclick="fetchGames('all')">全部</button>
+            <button onclick="fetchGames('hot')">熱門</button>
+            <button onclick="fetchGames('slot')">老虎機</button>
+        </nav>
+        <div id="user-zone">
+            <button id="login-btn" onclick="loginWithLine()">登入</button>
         </div>
     </header>
-    <div class="cat-bar">
-        <button onclick="fetchGames('all')">全部</button>
-        <button onclick="fetchGames('game')">遊戲</button>
-        <button onclick="fetchGames('ent')">娛樂</button>
-        <button onclick="fetchGames('live')">直播</button>
-    </div>
-    <div id="game-grid" class="grid"></div>
 
-    <script src="/js/auth.js"></script>
-    <script src="/js/api.js"></script>
+    <main id="game-grid" class="grid-container">
+        </main>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
 </body>
 </html>
