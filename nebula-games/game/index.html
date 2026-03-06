@@ -2,35 +2,33 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>星雲娛樂城 - 大廳</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星雲娛樂城</title>
     <link rel="manifest" href="/game/manifest.json">
     <style>
-        :root { --gold: #FFD700; --bg: #0d0d0d; --card-bg: #1a1a1a; --text: #fff; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333; sticky; top: 0; background: var(--bg); z-index: 10; }
-        .nav-btn { background: none; border: none; color: var(--gold); font-size: 20px; cursor: pointer; }
-        .cat-bar { display: flex; overflow-x: auto; padding: 10px; gap: 10px; border-bottom: 1px solid #222; }
-        .cat-item { white-space: nowrap; padding: 6px 15px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); font-size: 14px; }
+        :root { --gold: #FFD700; --bg: #0d0d0d; --card: #1a1a1a; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: sans-serif; }
+        header { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #333; }
+        .nav-btn, .login-btn { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 15px; cursor: pointer; }
+        .cat-bar { display: flex; gap: 10px; padding: 10px 15px; overflow-x: auto; }
+        .cat-bar button { background: #222; border: none; color: #aaa; padding: 8px 15px; border-radius: 20px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
-        .card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid #2a2a2a; }
-        .card img { width: 100%; aspect-ratio: 1; object-fit: cover; }
-        .card-info { padding: 10px; text-align: center; }
-        #login-btn img { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--gold); }
+        .card { background: var(--card); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid #333; cursor: pointer; }
     </style>
 </head>
 <body>
     <header>
-        <button class="nav-btn" onclick="location.href='/admin.html'">⚙️</button>
-        <h1 style="font-size: 1.2rem; color: var(--gold);">星雲娛樂城</h1>
-        <div id="login-btn" onclick="Auth.handleLoginClick()">登入</div>
+        <div style="color: var(--gold); font-weight: bold;">星雲娛樂城</div>
+        <div>
+            <button class="nav-btn" onclick="location.href='/game/looty-me.html'">個人</button>
+            <button class="login-btn" id="login-btn" onclick="Auth.login()">登入</button>
+        </div>
     </header>
     <div class="cat-bar">
-        <div class="cat-item" onclick="fetchGames('all')">全部</div>
-        <div class="cat-item" onclick="fetchGames('game')">遊戲</div>
-        <div class="cat-item" onclick="fetchGames('ent')">娛樂</div>
-        <div class="cat-item" onclick="fetchGames('limited')">限定</div>
-        <div class="cat-item" onclick="fetchGames('live')">直播</div>
+        <button onclick="fetchGames('all')">全部</button>
+        <button onclick="fetchGames('game')">遊戲</button>
+        <button onclick="fetchGames('ent')">娛樂</button>
+        <button onclick="fetchGames('live')">直播</button>
     </div>
     <div id="game-grid" class="grid"></div>
 
