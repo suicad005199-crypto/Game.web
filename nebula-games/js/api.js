@@ -1,36 +1,23 @@
 async function fetchGames(category = 'all') {
     const grid = document.getElementById('game-grid');
     if (!grid) return;
-    
-    grid.innerHTML = '<div class="loading">正在連線至星雲伺服器...</div>';
+    grid.innerHTML = '<p>載入中...</p>';
 
     try {
         const res = await fetch(`/api/games?category=${category}`);
         const games = await res.json();
-
-        if (!games || games.length === 0) {
-            grid.innerHTML = '<div class="empty">暫無上架遊戲，請聯繫客服</div>';
+        if (!games || !games.length) {
+            grid.innerHTML = '<p>目前尚無遊戲</p>';
             return;
         }
-
         grid.innerHTML = games.map(g => `
-            <div class="game-card" onclick="playGame('${g.slug}')">
-                <div class="badge">${g.category.toUpperCase()}</div>
-                <img src="${g.cover_image_url || '../images/default.png'}" alt="${g.title}">
-                <div class="card-info">
-                    <h3>${g.title}</h3>
-                    <div class="play-btn">立即開始</div>
-                </div>
+            <div class="card" onclick="window.location.href='/api/go?slug=${g.slug}'">
+                <img src="${g.cover_image_url || '../images/Baccarist.jpg'}" alt="${g.title}">
+                <h3>${g.title}</h3>
             </div>
         `).join('');
     } catch (err) {
-        grid.innerHTML = '<div class="error">系統維護中，請稍後再試</div>';
+        grid.innerHTML = '<p>系統連線失敗</p>';
     }
 }
-
-function playGame(slug) {
-    // 使用 API 跳轉以確保點擊統計生效，並解決 Safari 彈窗攔截問題
-    window.location.href = `/api/go?slug=${slug}`;
-}
-
 document.addEventListener('DOMContentLoaded', () => fetchGames());
