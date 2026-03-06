@@ -2,16 +2,16 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>後台管理</title>
-    <link rel="manifest" href="/game/manifest.json">
-    <style>body { background: #0d0d0d; color: #fff; font-family: sans-serif; padding: 20px; } button { margin-left: 10px; }</style>
+    <title>星雲娛樂城 - 管理後台</title>
 </head>
 <body>
-    <h1>遊戲管理系統</h1>
-    <button onclick="location.href='/game/index.html'">回大廳</button>
-    <div id="admin-panel" style="margin-top: 20px;">載入中...</div>
-    <script src="/js/auth.js"></script>
-    <script src="/js/admin.js"></script>
+    <h1>遊戲管理</h1>
+    <form id="addGameForm">
+        <input type="text" id="slug" placeholder="Slug (英文標識)" required>
+        <input type="text" id="title" placeholder="遊戲名稱" required>
+        <input type="text" id="target_url" placeholder="目標網址" required>
+        <button type="submit">新增遊戲</button>
+    </form>
+    <script src="../js/admin.js"></script>
 </body>
 </html>
