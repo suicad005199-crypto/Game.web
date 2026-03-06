@@ -1,15 +1,19 @@
-export async function onRequestPost(context) {
-    const { env } = context;
-    const guestId = crypto.randomUUID();
-    
-    await fetch(`${env.SUPABASE_URL}/rest/v1/users`, {
-        method: 'POST',
-        headers: { "apikey": env.SUPABASE_SERVICE_ROLE_KEY, "Authorization": `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ id: guestId, is_guest: true, display_name: "Guest" })
-    });
+export async function onRequest(context) {
+    // 產生隨機訪客 ID
+    const guestId = `guest_${Math.random().toString(36).substr(2, 9)}`;
 
-    const session = btoa(JSON.stringify({ uid: guestId, is_guest: true, role: 'user', exp: Math.floor(Date.now() / 1000) + 604800 }));
-    return new Response("OK", { 
-        headers: { "Set-Cookie": `session=${session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800` } 
+    return new Response(JSON.stringify({
+        success: true,
+        user: {
+            line_uid: guestId,
+            display_name: "訪客玩家",
+            is_guest: true
+        },
+        token: "guest_session_active"
+    }), { 
+        headers: { 
+            "Content-Type": "application/json;charset=UTF-8",
+            "Access-Control-Allow-Origin": "*" 
+        } 
     });
 }
