@@ -1,13 +1,18 @@
-async function loadLobby() {
+async function loadGames() {
     const grid = document.getElementById('game-grid');
+    grid.innerHTML = '<p>遊戲加載中...</p>';
     try {
         const res = await fetch('/api/games');
-        const data = await res.json();
-        grid.innerHTML = data.length ? data.map(g => `
-            <div class="card" onclick="location.href='/api/go?slug=${g.slug}'">
-                <img src="${g.cover_image_url || '../images/Baccarist.jpg'}">
-                <p>${g.title}</p>
-            </div>`).join('') : '<p>籌備中，敬請期待</p>';
-    } catch (e) { grid.innerHTML = '連線失敗'; }
+        const games = await res.json();
+        grid.innerHTML = games.map(g => `
+            <div class="game-card" onclick="location.href='/api/go?slug=${g.slug}'">
+                <img src="${g.cover_image_url || '../images/Baccarist.jpg'}" alt="${g.title}">
+                <h3>${g.title}</h3>
+                <div class="btn">立即玩</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        grid.innerHTML = '<p>連線失敗，請檢查網路</p>';
+    }
 }
-document.addEventListener('DOMContentLoaded', loadLobby);
+document.addEventListener('DOMContentLoaded', loadGames);
