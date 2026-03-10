@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nebula Blackjack</title>
+    <style>
+        :root {
+            --foggy-blue: #A8DADC;
+            --dark-blue: #457B9D;
+            --deep-navy: #1D3557;
+            --off-white: #F1FAEE;
+            --accent-red: #E63946;
+            --gold: #FFD700;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--deep-navy);
+            color: var(--off-white);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 頂部資訊 */
+        header {
+            padding: 15px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(168, 218, 220, 0.2);
+        }
+
+        .status-msg {
+            font-size: 1.1rem;
+            color: var(--foggy-blue);
+            height: 1.5em;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        /* 遊戲區域 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            padding: 10px;
+        }
+
+        .hand-container {
+            text-align: center;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .score-badge {
+            background: var(--dark-blue);
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .cards-display {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            min-height: 90px;
+        }
+
+        .card {
+            width: 60px;
+            height: 85px;
+            background: var(--off-white);
+            border-radius: 6px;
+            color: var(--deep-navy);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            animation: cardIn 0.3s ease-out;
+        }
+
+        @keyframes cardIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .card.red { color: var(--accent-red); }
+        .card.hidden { background: var(--dark-blue); color: var(--dark-blue); border: 2px solid var(--foggy-blue); }
+
+        /* 底部控制區 (單手優化) */
+        .controls {
+            background: var(--dark-blue);
+            padding: 25px 20px 40px;
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            border: none;
+            border-radius: 15px;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: transform 0.1s, opacity 0.2s;
+            cursor: pointer;
+        }
+
+        button:active { transform: scale(0.95); opacity: 0.9; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-hit { background: var(--foggy-blue); color: var(--deep-navy); }
+        .btn-stand { background: var(--off-white); color: var(--deep-navy); }
+        .btn-deal { 
+            background: var(--accent-red); 
+            color: white; 
+            grid-column: span 2;
+            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-weight: 800; font-size: 1.4rem;">NEBULA <span style="color:var(--foggy-blue)">CASINO</span></div>
+    <div id="status" class="status-msg">準備好挑戰了嗎？</div>
+</header>
+
+<main>
+    <div class="hand-container">
+        <div class="label">Dealer <span id="dealer-score-tag" class="score-badge">?</span></div>
+        <div id="dealer-cards" class="cards-display"></div>
+    </div>
+
+    <div class="hand-container">
+        <div class="label">Player <span id="player-score-tag" class="score-badge">0</span></div>
+        <div id="player-cards" class="cards-display"></div>
+    </div>
+</main>
+
+<div class="controls">
+    <button id="deal-btn" class="btn-deal" onclick="game.start()">NEW GAME</button>
+    <button id="hit-btn" class="btn-hit" onclick="game.playerHit()" disabled>HIT</button>
+    <button id="stand-btn" class="btn-stand" onclick="game.playerStand()" disabled>STAND</button>
+</div>
+
+<script>
+/**
+ * 21點核心遊戲邏輯架構
+ */
+const game = {
+    deck: [],
+    playerHand: [],
+    dealerHand: [],
+    isGameOver: true,
+
+    // 1. 洗牌與初始化
+    initDeck() {
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        this.deck = [];
+        for (let s of suits) {
+            for (let v of values) {
+                this.deck.push({ suit: s, value: v, isRed: (s === '♥' || s === '♦') });
+            }
+        }
+        // Fisher-Yates Shuffle
+        for (let i = this.deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+        }
+    },
+
+    // 2. 點數計算 (含 A 判定)
+    calculateScore(hand) {
+        let score = 0;
+        let aces = 0;
+        hand.forEach(card => {
+            if (card.value === 'A') aces++;
+            else if (['J', 'Q', 'K'].includes(card.value)) score += 10;
+            else score += parseInt(card.value);
+        });
+        for (let i = 0; i < aces; i++) {
+            score += (score + 11 <= 21) ? 11 : 1;
+        }
+        return score;
+    },
+
+    // 3. 遊戲流程控制
+    start() {
+        this.initDeck();
+        this.playerHand = [this.deck.pop(), this.deck.pop()];
+        this.dealerHand = [this.deck.pop(), this.deck.pop()];
+        this.isGameOver = false;
+        
+        document.getElementById('deal-btn').disabled = true;
+        document.getElementById('hit-btn').disabled = false;
+        document.getElementById('stand-btn').disabled = false;
+        document.getElementById('status').innerText = "您的回合...";
+        
+        this.render();
+        
+        if (this.calculateScore(this.playerHand) === 21) {
+            this.playerStand(); // 直接進入結算
+        }
+    },
+
+    playerHit() {
+        if (this.isGameOver) return;
+        this.playerHand.push(this.deck.pop());
+        this.render();
+        
+        if (this.calculateScore(this.playerHand) > 21) {
+            this.endGame("玩家爆牌 (Bust)！莊家勝");
+        }
+    },
+
+    async playerStand() {
+        if (this.isGameOver) return;
+        this.isGameOver = true;
+        document.getElementById('hit-btn').disabled = true;
+        document.getElementById('stand-btn').disabled = true;
+
+        // 莊家 AI: 點數小於 17 必須補牌
+        let dealerScore = this.calculateScore(this.dealerHand);
+        while (dealerScore < 17) {
+            this.dealerHand.push(this.deck.pop());
+            dealerScore = this.calculateScore(this.dealerHand);
+            this.render(true);
+            await new Promise(r => setTimeout(r, 600)); // 模擬考慮時間
+        }
+        
+        this.settle();
+    },
+
+    settle() {
+        const p = this.calculateScore(this.playerHand);
+        const d = this.calculateScore(this.dealerHand);
+        
+        if (d > 21) this.endGame("莊家爆牌！您贏了");
+        else if (p > d) this.endGame("恭喜獲勝！");
+        else if (p < d) this.endGame("莊家獲勝，再試一次");
+        else this.endGame("平局 (Push)");
+    },
+
+    endGame(msg) {
+        this.isGameOver = true;
+        document.getElementById('status').innerText = msg;
+        document.getElementById('deal-btn').disabled = false;
+        document.getElementById('hit-btn').disabled = true;
+        document.getElementById('stand-btn').disabled = true;
+        this.render(true);
+    },
+
+    // 4. UI 渲染
+    render(showFullDealer = false) {
+        const pCards = document.getElementById('player-cards');
+        const dCards = document.getElementById('dealer-cards');
+        
+        pCards.innerHTML = this.playerHand.map(c => this.createCardHTML(c)).join('');
+        document.getElementById('player-score-tag').innerText = this.calculateScore(this.playerHand);
+
+        if (showFullDealer) {
+            dCards.innerHTML = this.dealerHand.map(c => this.createCardHTML(c)).join('');
+            document.getElementById('dealer-score-tag').innerText = this.calculateScore(this.dealerHand);
+        } else {
+            // 隱藏莊家第一張牌
+            dCards.innerHTML = this.createCardHTML(this.dealerHand[0]) + '<div class="card hidden">?</div>';
+            document.getElementById('dealer-score-tag').innerText = "?";
+        }
+    },
+
+    createCardHTML(card) {
+        return `<div class="card ${card.isRed ? 'red' : ''}">${card.value}<span>${card.suit}</span></div>`;
+    }
+};
+</script>
+
+</body>
+</html>
